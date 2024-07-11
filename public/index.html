@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Data Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #data-table th, #data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        #data-table th {
+            background-color: #f2f2f2;
+        }
+        .tabs {
+            margin-top: 20px;
+        }
+        .tab {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        .tab.active {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plugin Data Fetcher</h1>
+    <label for="interval">Fetch Interval (ms):</label>
+    <input type="number" id="interval" value="3600000">
+    <button id="start-button">Start</button>
+    <button id="stop-button">Stop</button>
+    <h2>Fetched Data</h2>
+    <div id="tabs" class="tabs"></div>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Plugin Name</th>
+                <th>Users</th>
+            </tr>
+        </thead>
+        <tbody id="data-body">
+        </tbody>
+    </table>
+    <script>
+        let fetchInterval;
+        document.getElementById('start-button').addEventListener('click', () => {
+            const interval = parseInt(document.getElementById('interval').value, 10);
+            console.log('Starting fetch with interval:', interval);
+            fetchInterval = setInterval(fetchData, interval);
+            fetchData(); // Fetch immediately on start
+        });
+
+        document.getElementById('stop-button').addEventListener('click', () => {
+            console.log('Stopping fetch');
+            clearInterval(fetchInterval);
+        });
+
+        async function fetchData() {
+            console.log('Fetching data...');
+            try {
+                const response = await fetch('/fetch-plugin-data');
+                console.log('Response received:', response);
+                const data = await response.json();
+                console.log('Data received:', data);
+                updateTabs(data);
+                displayData(data[data.length - 1].data); // Display the latest data
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function updateTabs(data) {
+            const tabs = document.getElementById('tabs');
+            tabs.innerHTML = '';
+            data.forEach((entry, index) => {
+                const tab = document.createElement('div');
+                tab.classList.add('tab');
+                tab.textContent = entry.timestamp;
+                tab.addEventListener('click', () => {
+                    displayData(entry.data);
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+                if (index === data.length - 1) {
+                    tab.classList.add('active');
+                }
+                tabs.appendChild(tab);
+            });
+        }
+
+        function displayData(data) {
+            const dataBody = document.getElementById('data-body');
+            dataBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const indexCell = document.createElement('td');
+                indexCell.textContent = index + 1;
+                const timestampCell = document.createElement('td');
+                timestampCell.textContent = item.timestamp;
+                const nameCell = document.createElement('td');
+                nameCell.textContent = item.name;
+                const usersCell = document.createElement('td');
+                usersCell.textContent = item.users;
+                row.appendChild(indexCell);
+                row.appendChild(timestampCell);
+                row.appendChild(nameCell);
+                row.appendChild(usersCell);
+                dataBody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+    </script>
+</body>
+</html>
