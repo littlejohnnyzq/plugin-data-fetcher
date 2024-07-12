@@ -63,6 +63,24 @@ app.listen(1086, '0.0.0.0', () => {
     console.log(`Server is running on 1086`);
 });
 
+function startFetchTask() {
+    const now = new Date();
+    const millisTillNextHalfHour = 1800000 - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % 1800000;
+    
+    setTimeout(() => {
+        fetchData(); // 在接下来的半小时点执行
+        setInterval(fetchData, 1800000); // 每半小时执行一次
+    }, millisTillNextHalfHour);
+}
+
+startFetchTask();
+
+async function fetchData() {
+    const previousData = findPreviousData();
+    const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+    storeData(pluginData); // 存储当前数据
+}
+
 function readFullHistoryData() {
     if (!fs.existsSync(dataFilePath)) {
         return {}; // 如果文件不存在，返回空对象
@@ -73,9 +91,7 @@ function readFullHistoryData() {
 
 app.get('/fetch-plugin-data', async (req, res) => {
     try {
-        const previousData = findPreviousData();
-        const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
-        storeData(pluginData); // 存储当前数据
+        await fetchData();
         const fullHistoryData = readFullHistoryData(); // 读取完整历史数据
         res.json(fullHistoryData); // 发送完整历史数据
     } catch (error) {
