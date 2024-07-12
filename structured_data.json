@@ -684,76 +684,76 @@
             "DoDPercent": "--"
           }
         ],
-        "11:04": [
+        "11:30": [
           {
             "name": "Charts",
-            "users": "426374",
-            "DoDCount": "215",
+            "users": "426378",
+            "DoDCount": "219",
             "DoDPercent": "0.05%"
           },
           {
             "name": "NB Charts",
-            "users": "177207",
-            "DoDCount": "97",
-            "DoDPercent": "0.05%"
+            "users": "177209",
+            "DoDCount": "99",
+            "DoDPercent": "0.06%"
           },
           {
             "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
-            "users": "14324",
-            "DoDCount": "69",
-            "DoDPercent": "0.48%"
+            "users": "14325",
+            "DoDCount": "70",
+            "DoDPercent": "0.49%"
           },
           {
             "name": "Chartline",
-            "users": "107723",
-            "DoDCount": "47",
-            "DoDPercent": "0.04%"
+            "users": "107726",
+            "DoDCount": "50",
+            "DoDPercent": "0.05%"
           },
           {
             "name": "ChartGen (Beta)",
-            "users": "38337",
-            "DoDCount": "20",
+            "users": "38338",
+            "DoDCount": "21",
             "DoDPercent": "0.05%"
           },
           {
             "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
-            "users": "3270",
-            "DoDCount": "62",
-            "DoDPercent": "1.93%"
+            "users": "3273",
+            "DoDCount": "65",
+            "DoDPercent": "2.03%"
           },
           {
             "name": "Chart",
-            "users": "355543",
-            "DoDCount": "92",
+            "users": "355548",
+            "DoDCount": "97",
             "DoDPercent": "0.03%"
           },
           {
             "name": "Charts Modifier",
-            "users": "13609",
-            "DoDCount": "10",
-            "DoDPercent": "0.07%"
-          },
-          {
-            "name": "Auto Layout Bar Charts",
-            "users": "9663",
-            "DoDCount": "7",
-            "DoDPercent": "0.07%"
+            "users": "13610",
+            "DoDCount": "11",
+            "DoDPercent": "0.08%"
           },
           {
             "name": "Figma Charts",
-            "users": "9937",
-            "DoDCount": "36",
-            "DoDPercent": "0.36%"
+            "users": "9939",
+            "DoDCount": "38",
+            "DoDPercent": "0.38%"
           },
           {
-            "name": "Bar Charts",
-            "users": "8020",
+            "name": "Bar charts",
+            "users": "8871",
             "DoDCount": "--",
             "DoDPercent": "--"
           },
           {
-            "name": "Bar charts",
-            "users": "8869",
+            "name": "Auto Layout Bar Charts",
+            "users": "9664",
+            "DoDCount": "8",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8020",
             "DoDCount": "--",
             "DoDPercent": "--"
           },
@@ -771,7 +771,7 @@
           },
           {
             "name": "Flow chart",
-            "users": "61220",
+            "users": "61223",
             "DoDCount": "--",
             "DoDPercent": "--"
           },
@@ -783,7 +783,25 @@
           },
           {
             "name": "pie chart",
-            "users": "28861",
+            "users": "28862",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22347",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18126",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12682",
             "DoDCount": "--",
             "DoDPercent": "--"
           }

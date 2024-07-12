@@ -55,8 +55,11 @@ function findPreviousData() {
 }
 
 // 启动服务器
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+// app.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`);
+// });
+app.listen(3389, '121.40.69.104', () => {
+    console.log(`Server is running on http://121.40.69.104:3389`);
 });
 
 function readFullHistoryData() {
