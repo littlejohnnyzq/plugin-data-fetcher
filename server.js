@@ -182,6 +182,6 @@ async function autoScroll(page){
     });
 }
 
-app.listen(3389, '121.40.69.104', () => {
-    console.log(`Server is running on http://121.40.69.104:3389`);
+app.listen(1086, '121.40.69.104', () => {
+    console.log(`Server is running on http://121.40.69.104:1086`);
 });
