@@ -87,6 +87,7 @@ async function fetchPluginData(previousData) {
     console.log('Starting Puppeteer');
     const browser = await puppeteer.launch({
         headless: true, // 使用无头模式
+        executablePath: '/usr/bin/google-chrome',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
