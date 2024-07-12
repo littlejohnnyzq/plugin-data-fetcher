@@ -1,131 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plugin Data Fetcher</title>
+    <title>插件用户数采集-‘chart’</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        #data-table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .container {
+            display: flex;
+            border: #ddd 1px solid;
+            gap: 12px;
+            border-radius: 6px;
+            padding: 4px;
         }
-        #data-table th, #data-table td {
+
+        .time-columns {
+            background-color: #f2f4f6;
+            display: flex;
+            flex-direction: row;
+            flex-grow: 0;
+            width: 256px;
+            gap: 2px;
+        }
+
+        .time-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-right: #ddd 1px solid;
+        }
+
+        #data-table {
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+
+        #data-table th,
+        #data-table td {
             border: 1px solid #ddd;
             padding: 8px;
         }
+
         #data-table th {
             background-color: #f2f2f2;
         }
-        .tabs {
-            margin-top: 20px;
-        }
-        .tab {
-            display: inline-block;
-            margin-right: 10px;
-            padding: 10px;
-            background-color: #f2f2f2;
+
+        .time-label {
             cursor: pointer;
+            color: black;
+            text-decoration: none;
+            padding: 4px 8px;
+            display: block;
+            /* border: 1px solid #ddd; */
+            margin: 2px 0;
+            text-align: right;
         }
-        .tab.active {
-            background-color: #ddd;
+
+        .time-label:hover {
+            background-color: #e0e0e0;
+        }
+
+        .active {
+            background-color: #236de3;
+            color: white;
+        }
+
+        .table-area {
+            display: flex;
+            flex-grow: 1;
+            flex-basis: 1;
+            flex-direction: column;
+            padding: 4px;
+        }
+
+        .tool-bar {
+            flex-grow: 0;
+            height: 32px;
+            display: flex;
+            flex-direction: row;
+            align-items: end;
+            justify-content: end;
+            padding: 4px 12px;
+            gap: 12px;
+        }
+        .top-bar {
+            display: flex;
+            flex-direction: row;
+            padding: 16px;
+            gap: 16px;
         }
     </style>
 </head>
+
 <body>
-    <h1>Plugin Data Fetcher</h1>
-    <label for="interval">Fetch Interval (ms):</label>
-    <input type="number" id="interval" value="3600000">
-    <button id="start-button">Start</button>
-    <button id="stop-button">Stop</button>
-    <h2>Fetched Data</h2>
-    <div id="tabs" class="tabs"></div>
-    <table id="data-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Timestamp</th>
-                <th>Plugin Name</th>
-                <th>Users</th>
-            </tr>
-        </thead>
-        <tbody id="data-body">
-        </tbody>
-    </table>
+    <h2>插件用户数采集-‘chart’</h2>
+    <div class="top-bar">
+        <label for="interval">自动采集间隔(分钟):</label>
+        <input type="number" id="interval" value="30" disabled>
+        <!-- <button id="start-button">启动</button>
+        <button id="stop-button">停止</button> -->
+        <button id="fetchOnce-button">单次采集</button>
+    </div>
+
+
+    <div class="container">
+        <div class="time-columns">
+            <div class="time-column" id="years-column"></div>
+            <div class="time-column hidden" id="months-column"></div>
+            <div class="time-column hidden" id="days-column"></div>
+            <div class="time-column hidden" id="times-column"></div>
+        </div>
+        <div class="table-area">
+            <div id="toolbar" class="tool-bar">
+                <button id="deleteBtn">删除本次数据</button>
+                <button id="refreshLocal">刷新本地缓存</button>
+            </div>  
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>插件名</th>
+                        <th>用户数</th>
+                        <th>日增数</th>
+                        <th>日增率</th>
+                    </tr>
+                </thead>
+                <tbody id="data-body">
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
     <script>
         let fetchInterval;
-        document.getElementById('start-button').addEventListener('click', () => {
-            const interval = parseInt(document.getElementById('interval').value, 10);
-            console.log('Starting fetch with interval:', interval);
-            fetchInterval = setInterval(fetchData, interval);
-            fetchData(); // Fetch immediately on start
+        let currentSelectedTimeDiv = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            const interval = parseInt(document.getElementById('interval').value, 10) * 60000; // 将分钟转换为毫秒
+            // console.log('Starting fetch at the next scheduled time point with interval:', interval);
+
+            // 计算当前时间
+            const now = new Date();
+            // 计算距离下一个整除时间点的毫秒数
+            const delay = interval - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % interval;
+
+            // 设置超时，以确保在下一个整除时间点开始周期性执行
+            setTimeout(() => {
+                fetchData(); // 在第一个整除点立即执行
+                fetchInterval = setInterval(fetchData, interval); // 之后按照设定的间隔周期性执行
+            }, delay);
+            document.getElementById('refreshLocal').addEventListener('click', () => {
+                updateLocalStorage()
+            });
+            // localStorage.removeItem('pluginData');
+            let existingData = localStorage.getItem('pluginData');
+            // console.log('启动时获取的数据', existingData);
+            existingData = JSON.parse(existingData);
+            // console.log('使用数据', existingData);
+            if (existingData) {
+                displayTimeLabels(existingData);
+            }
         });
 
-        document.getElementById('stop-button').addEventListener('click', () => {
-            console.log('Stopping fetch');
-            clearInterval(fetchInterval);
+        // document.getElementById('start-button').addEventListener('click', () => {
+        //     const interval = parseInt(document.getElementById('interval').value, 10) * 60000; // 将分钟转换为毫秒
+        //     // console.log('Starting fetch at the next scheduled time point with interval:', interval);
+
+        //     // 计算当前时间
+        //     const now = new Date();
+        //     // 计算距离下一个整除时间点的毫秒数
+        //     const delay = interval - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % interval;
+
+        //     // 设置超时，以确保在下一个整除时间点开始周期性执行
+        //     setTimeout(() => {
+        //         fetchData(); // 在第一个整除点立即执行
+        //         fetchInterval = setInterval(fetchData, interval); // 之后按照设定的间隔周期性执行
+        //     }, delay);
+        // });
+
+        // document.getElementById('stop-button').addEventListener('click', () => {
+        //     clearInterval(fetchInterval);
+        // });
+        document.getElementById('fetchOnce-button').addEventListener('click', () => {
+            fetchData();
+
         });
 
         async function fetchData() {
-            console.log('Fetching data...');
             try {
                 const response = await fetch('/fetch-plugin-data');
                 console.log('Response received:', response);
                 const data = await response.json();
                 console.log('Data received:', data);
-                updateTabs(data);
-                displayData(data[data.length - 1].data); // Display the latest data
+                storeAndDisplayData(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
 
-        function updateTabs(data) {
-            const tabs = document.getElementById('tabs');
-            tabs.innerHTML = '';
-            data.forEach((entry, index) => {
-                const tab = document.createElement('div');
-                tab.classList.add('tab');
-                tab.textContent = entry.timestamp;
-                tab.addEventListener('click', () => {
-                    displayData(entry.data);
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                });
-                if (index === data.length - 1) {
-                    tab.classList.add('active');
-                }
-                tabs.appendChild(tab);
-            });
+        function storeAndDisplayData(data) {
+            // console.log('storeAndDisplayData的数据', data);
+            localStorage.setItem('pluginData', JSON.stringify(data));
+
+            displayTimeLabels(data);
         }
 
-        function displayData(data) {
+        function displayTimeLabels(structuredData) {
+            const yearsColumn = document.getElementById('years-column');
+            const monthsColumn = document.getElementById('months-column');
+            const daysColumn = document.getElementById('days-column');
+            const timesColumn = document.getElementById('times-column');
+
+            // 清空现有列
+            yearsColumn.innerHTML = '';
+            monthsColumn.innerHTML = '';
+            daysColumn.innerHTML = '';
+            timesColumn.innerHTML = '';
+
+            // 遍历年份
+            for (const year in structuredData) {
+                const yearDiv = document.createElement('div');
+                yearDiv.textContent = year;
+                yearDiv.classList.add('time-label');
+                yearDiv.addEventListener('click', () => {
+                    showMonths(year, structuredData[year]);
+                    document.querySelectorAll('#years-column .time-label').forEach(el => el.classList.remove('active'));
+                    yearDiv.classList.add('active');
+                });
+
+                yearsColumn.appendChild(yearDiv);
+            }
+
+            // 默认显示第一个年份的数据
+            const firstYear = Object.keys(structuredData).sort((a, b) => b - a)[0];
+            if (firstYear) {
+                const firstYearDiv = yearsColumn.querySelector('.time-label');
+                showMonths(firstYear, structuredData[firstYear]);
+                firstYearDiv.classList.add('active');
+            }
+        }
+
+        function showMonths(year, months) {
+            const monthsColumn = document.getElementById('months-column');
+            const daysColumn = document.getElementById('days-column');
+            const timesColumn = document.getElementById('times-column');
+            monthsColumn.innerHTML = '';
+            daysColumn.innerHTML = '';
+            timesColumn.innerHTML = '';
+            monthsColumn.classList.remove('hidden');
+            daysColumn.classList.add('hidden');
+            timesColumn.classList.add('hidden');
+
+            for (const month of Object.keys(months).sort((a, b) => b - a)) {
+                const monthDiv = document.createElement('div');
+                monthDiv.textContent = `${month}月`;
+                monthDiv.classList.add('time-label');
+                monthDiv.addEventListener('click', () => {
+                    showDays(year, month, months[month]);
+                    document.querySelectorAll('#months-column .time-label').forEach(el => el.classList.remove('active'));
+                    monthDiv.classList.add('active');
+                });
+
+                monthsColumn.appendChild(monthDiv);
+            }
+
+            // 默认显示第一月的数据
+            if (Object.keys(months).length > 0) {
+                const firstMonth = Object.keys(months).sort((a, b) => b - a)[0];
+                const firstMonthDiv = monthsColumn.querySelector('.time-label');
+                showDays(year, firstMonth, months[firstMonth]);
+                firstMonthDiv.classList.add('active');
+            }
+        }
+
+        function showDays(year, month, days) {
+            const daysColumn = document.getElementById('days-column');
+            const timesColumn = document.getElementById('times-column');
+            daysColumn.innerHTML = '';
+            timesColumn.innerHTML = '';
+            daysColumn.classList.remove('hidden');
+            timesColumn.classList.add('hidden');
+
+            for (const day of Object.keys(days).sort((a, b) => b - a)) {
+                const dayDiv = document.createElement('div');
+                dayDiv.textContent = `${day}日`;
+                dayDiv.classList.add('time-label');
+                dayDiv.addEventListener('click', () => {
+                    showTimes(year, month, day, days[day]);
+                    document.querySelectorAll('#days-column .time-label').forEach(el => el.classList.remove('active'));
+                    dayDiv.classList.add('active');
+                });
+
+                daysColumn.appendChild(dayDiv);
+            }
+
+            // 默认显示第一天的数据
+            if (Object.keys(days).length > 0) {
+                const firstDay = Object.keys(days).sort((a, b) => b - a)[0];
+                const firstDayDiv = daysColumn.querySelector('.time-label');
+                showTimes(year, month, firstDay, days[firstDay]);
+                firstDayDiv.classList.add('active');
+            }
+        }
+
+        function showTimes(year, month, day, times) {
+            const timesColumn = document.getElementById('times-column');
+            timesColumn.innerHTML = '';
+            timesColumn.classList.remove('hidden');
+
+            for (const time of Object.keys(times).sort((a, b) => b.localeCompare(a))) {
+                const timeEntry = times[time];
+                const timeDiv = document.createElement('div');
+                const deleteBtn = document.getElementById('deleteBtn');
+                timeDiv.textContent = time;
+                timeDiv.classList.add('time-label');
+                timeDiv.addEventListener('click', () => {
+                    document.querySelectorAll('#times-column .time-label').forEach(el => el.classList.remove('active'));
+                    timeDiv.classList.add('active');
+                    displayData(timeEntry);
+                    currentSelectedTimeDiv = timeDiv; // 设置当前选中的时间Div
+                    deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, time, timeEntry);
+                });
+
+                timesColumn.appendChild(timeDiv);
+            }
+            // 默认显示第一个时间点的数据
+            if (Object.keys(times).length > 0) {
+                const firstTime = Object.keys(times).sort((a, b) => b.localeCompare(a))[0];
+                const firstTimeDiv = timesColumn.querySelector('.time-label');
+                firstTimeDiv.classList.add('active');
+                displayData(times[firstTime]);
+                currentSelectedTimeDiv = firstTimeDiv; // 设置当前选中的时间Div
+                deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, time, timeEntry);
+            }
+        }
+
+        function displayData(entries) {
             const dataBody = document.getElementById('data-body');
             dataBody.innerHTML = '';
-            data.forEach((item, index) => {
+            // console.log('接受到的数据：', entries);
+
+            entries.forEach((entry, index) => {
                 const row = document.createElement('tr');
+
                 const indexCell = document.createElement('td');
                 indexCell.textContent = index + 1;
-                const timestampCell = document.createElement('td');
-                timestampCell.textContent = item.timestamp;
-                const nameCell = document.createElement('td');
-                nameCell.textContent = item.name;
-                const usersCell = document.createElement('td');
-                usersCell.textContent = item.users;
                 row.appendChild(indexCell);
-                row.appendChild(timestampCell);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = entry.name;
                 row.appendChild(nameCell);
+
+                const usersCell = document.createElement('td');
+                usersCell.textContent = entry.users;
                 row.appendChild(usersCell);
+
+                const DoDCountCell = document.createElement('td');
+                DoDCountCell.textContent = entry.DoDCount;
+                row.appendChild(DoDCountCell);
+
+                const DoDPercentCell = document.createElement('td');
+                DoDPercentCell.textContent = entry.DoDPercent;
+                row.appendChild(DoDPercentCell);
+
                 dataBody.appendChild(row);
+                if (entry.name.includes('i Chart')) {
+                    row.style.backgroundColor = '#eee8ff';
+                } else if (entry.name.includes('Chart Master 3001')) {
+                    row.style.backgroundColor = '#ffffdd';
+                }
+            });
+        }
+        function deleteCurrentEntry(year, month, day, time, timeEntry) {
+            if (!confirm('Are you sure you want to delete this entry?')) {
+                return; // 用户取消操作
+            }
+            removeData(year, month, day, time, timeEntry, () => {
+                const nextTimeDiv = currentSelectedTimeDiv.nextElementSibling || currentSelectedTimeDiv.previousElementSibling;
+                if (nextTimeDiv) {
+                    nextTimeDiv.click(); // 触发下一个标签的点击事件，显示数据
+                }
+                currentSelectedTimeDiv.parentNode.removeChild(currentSelectedTimeDiv);
+                currentSelectedTimeDiv = null; // 清除引用
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchData();
-        });
+        function removeData(year, month, day, time, timeEntry, callback) {
+            fetch(`/delete-time-data?year=${year}&month=${month}&day=${day}&time=${time}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateLocalStorage();
+                        callback();
+                    } else {
+                        alert('Failed to delete data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting time data:', error);
+                    alert('Error deleting data');
+                });
+        }
+        function updateLocalStorage() {
+            fetch('/get-full-data')  // 假设这个API返回最新的完整数据
+                .then(response => response.json())
+                .then(data => {
+                    console.log('更新缓存',data)
+                    storeAndDisplayData(data);
+                })
+                .catch(error => {
+                    console.error('Failed to update local storage:', error);
+                });
+        }
     </script>
 </body>
+
 </html>
