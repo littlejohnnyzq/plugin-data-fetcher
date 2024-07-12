@@ -159,13 +159,7 @@
                 updateLocalStorage()
             });
             // localStorage.removeItem('pluginData');
-            let existingData = localStorage.getItem('pluginData');
-            // console.log('启动时获取的数据', existingData);
-            existingData = JSON.parse(existingData);
-            // console.log('使用数据', existingData);
-            if (existingData) {
-                displayTimeLabels(existingData);
-            }
+            updateLocalStorage();
         });
 
         // document.getElementById('start-button').addEventListener('click', () => {
