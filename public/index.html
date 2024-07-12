@@ -166,7 +166,7 @@
             const now = new Date();
             // 计算距离下一个整除时间点的毫秒数
             const delay = interval - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % interval;
-
+            console.log(delay,interval);
             // 设置超时，以确保在下一个整除时间点开始周期性执行
             setTimeout(() => {
                 fetchData(); // 在第一个整除点立即执行
