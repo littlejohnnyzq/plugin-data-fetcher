@@ -54,14 +54,14 @@ function findPreviousData() {
     return storedData[year][month][lastDay][lastTime];
 }
 
-// 启动服务器
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
-
-app.listen(1086, '0.0.0.0', () => {
-    console.log(`Server is running on http://121.40.69.104:1086`);
+//启动服务器
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
+
+// app.listen(3389, '121.40.69.104', () => {
+//     console.log(`Server is running on http://121.40.69.104:3389`);
+// });
 
 function readFullHistoryData() {
     if (!fs.existsSync(dataFilePath)) {
@@ -86,8 +86,7 @@ app.get('/fetch-plugin-data', async (req, res) => {
 async function fetchPluginData(previousData) {
     console.log('Starting Puppeteer');
     const browser = await puppeteer.launch({
-        headless: true, // 使用无头模式
-        executablePath: '/usr/bin/google-chrome',
+        headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
@@ -97,42 +96,17 @@ async function fetchPluginData(previousData) {
     await page.setViewport({ width: 1280, height: 800 });
 
     try {
-        await page.goto('https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all', {
-            waitUntil: 'networkidle2',
-        });
-        await autoScroll(page);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
+        const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
+        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=i+3D+extrude+shape&editor_type=all&price=all&creators=all';
 
-        const pluginData = await page.evaluate(async (previousData) => {
-            const plugins = document.querySelectorAll('.plugin_row--pluginRow--lySkC');
-            const data = [];
-            for (const plugin of plugins) {
-                if (data.length >= 20) break; // 如果已经获取到10个插件，停止循环
-                const nameElement = plugin.querySelector('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd');
-                const name = nameElement ? nameElement.innerText : 'N/A';
-                const usersElement = plugin.querySelector('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
-                let preciseUsers = 'N/A';
-        
-                if (usersElement) {
-                    const mouseOverEvent = new MouseEvent('mouseover', { view: window, bubbles: true, cancelable: true });
-                    usersElement.dispatchEvent(mouseOverEvent);
-                    await new Promise(resolve => setTimeout(resolve, 500));  // 正确使用 await
-                    const preciseUsersElement = usersElement.querySelector('.dropdown--dropdownContents--BqcL5');
-                    preciseUsers = preciseUsersElement ? preciseUsersElement.innerText.match(/\d+/g).join('') : 'N/A';
-                }
-                
-                const currentUsers = parseInt(preciseUsers);
-                const sortName = name.slice(0, 20);
-                const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
-                const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
-                const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
-                const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
-        
-                data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
-            }
-            return data;
-        }, previousData); // 注意这里是如何传递 previousData 作为参数的
+        // Fetch data from the first URL
+        const data1 = await fetchPageData(page, url1, previousData);
+
+        // Fetch data from the second URL
+        const data2 = await fetchPageData(page, url2, previousData);
+
+        // Combine data from both pages
+        const pluginData = data1.concat(data2);
 
         await browser.close();
         console.log('Puppeteer finished');
@@ -145,8 +119,43 @@ async function fetchPluginData(previousData) {
     }
 }
 
+async function fetchPageData(page, url, previousData) {
+    await page.goto(url, {
+        waitUntil: 'networkidle2',
+    });
+    await autoScroll(page);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
+
+    const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
+    const data = [];
+    for (const plugin of plugins) {
+        if (data.length >= 20) break;
+
+        const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
+        const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
+
+        let preciseUsers = 'N/A';
+        if (usersElement) {
+            await usersElement.hover(); // Use hover from Puppeteer
+            await new Promise(resolve => setTimeout(resolve, 500)); // Manually create a timeout
+            preciseUsers = await usersElement.$eval('.dropdown--dropdownContents--BqcL5', el => el.innerText.match(/\d+/g).join(''));
+        }
+
+        const currentUsers = parseInt(preciseUsers);
+        const sortName = name.slice(0, 20);
+        const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
+        const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
+        const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
+        const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
+
+        data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
+    }
+    return data;
+}
+
 // 模拟用户滚动
-async function autoScroll(page){
+async function autoScroll(page) {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             var totalHeight = 0;
@@ -156,7 +165,7 @@ async function autoScroll(page){
                 window.scrollBy(0, distance);
                 totalHeight += distance;
 
-                if(totalHeight >= scrollHeight){
+                if (totalHeight >= scrollHeight) {
                     clearInterval(timer);
                     resolve();
                 }
