@@ -59,7 +59,7 @@ function findPreviousData() {
 //     console.log(`Server is running on http://localhost:${port}`);
 // });
 
-app.listen(1086, '121.40.69.104', () => {
+app.listen(1086, '0.0.0.0', () => {
     console.log(`Server is running on http://121.40.69.104:1086`);
 });
 
