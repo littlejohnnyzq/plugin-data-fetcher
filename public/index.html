@@ -52,6 +52,7 @@
             border: 1px solid #ddd;
             padding: 8px;
             max-height: 26px;
+            text-align: left;
         }
 
         #data-table th {
@@ -142,11 +143,11 @@
             <table id="data-table">
                 <thead>
                     <tr>
-                        <th>序号</th>
+                        <th></th>
                         <th>插件名</th>
                         <th>用户数</th>
-                        <th>日增数</th>
-                        <th>日增率</th>
+                        <th style="border-right: none; white-space: nowrap;">日增</th>
+                        <th style="border-left: none;"></th>
                     </tr>
                 </thead>
                 <tbody id="data-body">
@@ -160,18 +161,6 @@
         let fetchInterval;
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
-            const interval = parseInt(document.getElementById('interval').value, 10) * 60000; // 将分钟转换为毫秒
-            // console.log('Starting fetch at the next scheduled time point with interval:', interval);
-            // 计算当前时间
-            const now = new Date();
-            // 计算距离下一个整除时间点的毫秒数
-            const delay = interval - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % interval;
-            console.log(delay,interval);
-            // 设置超时，以确保在下一个整除时间点开始周期性执行
-            setTimeout(() => {
-                fetchData(); // 在第一个整除点立即执行
-                fetchInterval = setInterval(fetchData, interval); // 之后按照设定的间隔周期性执行
-            }, delay);
             document.getElementById('refreshLocal').addEventListener('click', () => {
                 updateLocalStorage()
             });
@@ -377,6 +366,12 @@
 
                 const DoDCountCell = document.createElement('td');
                 DoDCountCell.textContent = entry.DoDCount;
+                const DoDCount = parseInt(entry.DoDCount, 10);
+                if (DoDCount >= 100 && DoDCount < 200) {
+                    DoDCountCell.style.color = '#f06010';
+                } else if (DoDCount >= 200) {
+                    DoDCountCell.style.color = '#bb0060';
+                }
                 row.appendChild(DoDCountCell);
 
                 const DoDPercentCell = document.createElement('td');
