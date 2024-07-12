@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>插件用户数采集-‘chart’</title>
+    <title>插件用户数采集</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
         h2 {
             margin: 0;
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
@@ -117,7 +117,7 @@
 </head>
 
 <body>
-    <h2>插件用户数采集-‘chart’</h2>
+    <h2>插件用户数采集</h2>
     <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>
         <input type="number" style="width: 48px;" id="interval" value="30" disabled>
@@ -384,7 +384,7 @@
                 row.appendChild(DoDPercentCell);
 
                 dataBody.appendChild(row);
-                if (entry.name.includes('i Chart')) {
+                if (entry.name.includes('i Chart') || entry.name.includes('i 3D')) {
                     row.style.backgroundColor = '#eee8ff';
                 } else if (entry.name.includes('Chart Master 3001')) {
                     row.style.backgroundColor = '#ffffdd';
