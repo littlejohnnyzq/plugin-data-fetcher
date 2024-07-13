@@ -106,21 +106,16 @@ async function fetchPluginData(previousData) {
         executablePath: '/usr/bin/google-chrome',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
-    await page.setJavaScriptEnabled(true);
-    await page.setViewport({ width: 1280, height: 800 });
 
     try {
         const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
         const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=i+3D+extrude+shape&editor_type=all&price=all&creators=all';
 
         // Fetch data from the first URL
-        const data1 = await fetchPageData(page, url1, previousData);
+        const data1 = await fetchPageData(browser, url1, previousData);
 
         // Fetch data from the second URL
-        const data2 = await fetchPageData(page, url2, previousData);
+        const data2 = await fetchPageData(browser, url2, previousData);
 
         // Combine data from both pages
         const pluginData = data1.concat(data2);
@@ -136,7 +131,12 @@ async function fetchPluginData(previousData) {
     }
 }
 
-async function fetchPageData(page, url, previousData) {
+async function fetchPageData(browser, url, previousData) {
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+    await page.setJavaScriptEnabled(true);
+    await page.setViewport({ width: 1280, height: 800 });
     await page.goto(url, {
         waitUntil: 'networkidle2',
     });
