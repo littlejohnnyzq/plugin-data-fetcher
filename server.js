@@ -4,7 +4,7 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = 1086;
 
 puppeteer.use(StealthPlugin());
 app.use(express.static('public'));
@@ -17,76 +17,131 @@ function storeData(data) {
     const year = now.getFullYear().toString();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
-    const time = now.toTimeString().slice(0, 5);
+    const time = now.toTimeString().slice(0, 5).replace(/:/g, '-');
 
-    let storedData = {};
-    if (fs.existsSync(dataFilePath)) {
-        storedData = JSON.parse(fs.readFileSync(dataFilePath));
+    const dirPath = path.join(__dirname, 'data', year, month, day);
+
+    try {
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+        }
+
+        const filePath = path.join(dirPath, `${time}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        console.log('Data stored successfully:', filePath);
+    } catch (error) {
+        console.error('Failed to store data:', error);
     }
-
-    if (!storedData[year]) storedData[year] = {};
-    if (!storedData[year][month]) storedData[year][month] = {};
-    if (!storedData[year][month][day]) storedData[year][month][day] = {};
-
-    storedData[year][month][day][time] = data;
-
-    fs.writeFileSync(dataFilePath, JSON.stringify(storedData, null, 2));
 }
 
-// 查找前一日数据
-function findPreviousData() {
+function findFirstDataOfToday() {
     const now = new Date();
     const year = now.getFullYear().toString();
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
 
-    if (!fs.existsSync(dataFilePath)) return null;
-    const storedData = JSON.parse(fs.readFileSync(dataFilePath));
+    // 检查目录是否存在
+    const dirPath = path.join(__dirname, 'data', year, month, day);
+    if (!fs.existsSync(dirPath)) {
+        console.log("No data for today.");
+        return null;
+    }
 
-    if (!storedData[year] || !storedData[year][month]) return null;
+    // 读取目录中的所有文件，假设文件名是时间戳，如 "08-00.json"
+    const files = fs.readdirSync(dirPath).filter(file => file.endsWith('.json'));
+    if (files.length === 0) {
+        console.log("No data files found for today.");
+        return null;
+    }
 
-    const days = Object.keys(storedData[year][month]).filter(d => d < day).sort();
-    if (days.length === 0) return null;
-    const lastDay = days[days.length - 1];
-    const times = Object.keys(storedData[year][month][lastDay]).sort();
-    const lastTime = times[times.length - 1];
+    // 对文件名进行排序以找到第一个文件，即最早的数据点
+    const firstFile = files.sort()[0];
+    const filePath = path.join(dirPath, firstFile);
+    const firstData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-    return storedData[year][month][lastDay][lastTime];
+    return firstData;
 }
 
-// 启动服务器
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
-
-app.listen(3389, '121.40.69.104', () => {
-    console.log(`Server is running on http://121.40.69.104:3389`);
+//启动服务器
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
 
-function readFullHistoryData() {
-    if (!fs.existsSync(dataFilePath)) {
-        return {}; // 如果文件不存在，返回空对象
+// app.listen(1086, '0.0.0.0', () => {
+//     console.log(`Server is running on 1086`);
+// });
+
+function startFetchTask() {
+    const now = new Date();
+    const millisTillNextHalfHour = 1800000 - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % 1800000;
+    
+    setTimeout(() => {
+        fetchData(); // 在接下来的半小时点执行
+        setInterval(fetchData, 1800000); // 每半小时执行一次
+    }, millisTillNextHalfHour);
+}
+
+startFetchTask();
+
+async function fetchData() {
+    const previousData = findFirstDataOfToday();
+    const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+    storeData(pluginData); // 存储当前数据
+}
+
+// 读取指定日期和时间的数据
+function readDataByDateTime(year, month, day, time) {
+    const dirPath = path.join(__dirname, 'data', year, month, day);
+    const fileName = `${time}.json`; // 时间格式应为 "HH-MM"，例如 "13-45.json"
+    const filePath = path.join(dirPath, fileName);
+
+    if (fs.existsSync(filePath)) {
+        const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        return fileData; // 返回该时间点的数据
+    } else {
+        return null; // 如果文件不存在，返回 null 或适当的默认值
     }
-    const rawData = fs.readFileSync(dataFilePath);
-    return JSON.parse(rawData);
 }
 
 app.get('/fetch-plugin-data', async (req, res) => {
     try {
-        const previousData = findPreviousData();
-        const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
-        storeData(pluginData); // 存储当前数据
-        const fullHistoryData = readFullHistoryData(); // 读取完整历史数据
-        res.json(fullHistoryData); // 发送完整历史数据
+        await fetchData();
+        res.json({ success: true });
     } catch (error) {
         console.error('Error fetching plugin data:', error);
         res.status(500).json({ error: 'Failed to fetch plugin data' });
     }
 });
+
 async function fetchPluginData(previousData) {
     console.log('Starting Puppeteer');
+
+    try {
+        const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
+        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=i+3D+extrude+shape&editor_type=all&price=all&creators=all';
+
+        // Fetch data from the first URL
+        const data1 = await fetchPageData(url1, previousData);
+
+        // Fetch data from the second URL
+        const data2 = await fetchPageData(url2, previousData);
+
+        // Combine data from both pages
+        const pluginData = data1.concat(data2);
+
+        console.log('Puppeteer finished');
+        return pluginData;
+
+    } catch (error) {
+        console.error('Error during Puppeteer execution:', error);
+        throw error;
+    }
+}
+
+async function fetchPageData(url, previousData) {
     const browser = await puppeteer.launch({
-        headless: true, // 使用无头模式
+        headless: true,
+        // executablePath: '/usr/bin/google-chrome',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
@@ -94,58 +149,67 @@ async function fetchPluginData(previousData) {
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
     await page.setJavaScriptEnabled(true);
     await page.setViewport({ width: 1280, height: 800 });
+    await page.goto(url, {
+        waitUntil: 'networkidle2', timeout: 30000, 
+    });
+    await autoScroll(page);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
 
-    try {
-        await page.goto('https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all', {
-            waitUntil: 'networkidle2',
-        });
-        await autoScroll(page);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
+    const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
+    const data = [];
+    for (const plugin of plugins) {
+        if (data.length >= 20) break;
 
-        const pluginData = await page.evaluate(async (previousData) => {
-            const plugins = document.querySelectorAll('.plugin_row--pluginRow--lySkC');
-            const data = [];
-            for (const plugin of plugins) {
-                if (data.length >= 20) break; // 如果已经获取到10个插件，停止循环
-                const nameElement = plugin.querySelector('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd');
-                const name = nameElement ? nameElement.innerText : 'N/A';
-                const usersElement = plugin.querySelector('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
-                let preciseUsers = 'N/A';
-        
-                if (usersElement) {
-                    const mouseOverEvent = new MouseEvent('mouseover', { view: window, bubbles: true, cancelable: true });
-                    usersElement.dispatchEvent(mouseOverEvent);
-                    await new Promise(resolve => setTimeout(resolve, 500));  // 正确使用 await
-                    const preciseUsersElement = usersElement.querySelector('.dropdown--dropdownContents--BqcL5');
-                    preciseUsers = preciseUsersElement ? preciseUsersElement.innerText.match(/\d+/g).join('') : 'N/A';
-                }
-                
-                const currentUsers = parseInt(preciseUsers);
-                const sortName = name.slice(0, 20);
-                const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
-                const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
-                const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
-                const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
-        
-                data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
-            }
-            return data;
-        }, previousData); // 注意这里是如何传递 previousData 作为参数的
+        const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
+        const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
 
-        await browser.close();
-        console.log('Puppeteer finished');
-        return pluginData;
+        let preciseUsers = 'N/A';
+        if (usersElement) {
+            await usersElement.hover(); // Use hover from Puppeteer
+            await new Promise(resolve => setTimeout(resolve, 500)); // Manually create a timeout
+            preciseUsers = await usersElement.$eval('.dropdown--dropdownContents--BqcL5', el => el.innerText.match(/\d+/g).join(''));
+        }
 
-    } catch (error) {
-        console.error('Error during Puppeteer execution:', error);
-        await browser.close();
-        throw error;
+        const currentUsers = parseInt(preciseUsers);
+        const sortName = name.slice(0, 20);
+        const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
+        const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
+        const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
+        const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
+
+        data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
     }
+    await browser.close();
+    return data;
+}
+
+function constructDirectory() {
+    const basePath = path.join(__dirname, 'data');
+    let directory = {};
+
+    function exploreDirectory(dirPath, current) {
+        fs.readdirSync(dirPath, { withFileTypes: true }).forEach(dirent => {
+            if (dirent.isDirectory()) {
+                const nextPath = path.join(dirPath, dirent.name);
+                if (!current[dirent.name]) current[dirent.name] = {};
+                exploreDirectory(nextPath, current[dirent.name]);
+            } else {
+                // 确保只处理以 '.json' 结尾的文件
+                if (dirent.name.endsWith('.json')) {
+                    if (!current.times) current.times = [];
+                    current.times.push(dirent.name.replace('.json', ''));
+                }
+            }
+        });
+    }
+
+    exploreDirectory(basePath, directory);
+    return directory;
 }
 
 // 模拟用户滚动
-async function autoScroll(page){
+async function autoScroll(page) {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             var totalHeight = 0;
@@ -155,7 +219,7 @@ async function autoScroll(page){
                 window.scrollBy(0, distance);
                 totalHeight += distance;
 
-                if(totalHeight >= scrollHeight){
+                if (totalHeight >= scrollHeight) {
                     clearInterval(timer);
                     resolve();
                 }
@@ -166,42 +230,46 @@ async function autoScroll(page){
 
 app.delete('/delete-time-data', (req, res) => {
     const { year, month, day, time } = req.query;
+    console.log(`Attempting to delete data for: ${year}-${month}-${day} at ${time}`);
     try {
         if (deleteTimeData(year, month, day, time)) {
+            console.log('Data deleted successfully');
             res.json({ success: true });
         } else {
+            console.log('Data not found');
             res.status(404).json({ success: false, message: "Time data not found" });
         }
     } catch (error) {
+        console.error('Error during deletion:', error);
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 });
 
-app.get('/get-full-data', (req, res) => {
-    // 返回最新的完整数据
-    const data = readFullDataFromJSON();
-    res.json(data);
+app.get('/get-data', (req, res) => {
+    const { year, month, day, time } = req.query;
+    try {
+        const data = readDataByDateTime(year, month, day, time);
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).json({ error: "Failed to fetch data" });
+    }
+});
+app.get('/get-directory', (req, res) => {
+    try {
+        const directory = constructDirectory();
+        res.json(directory);
+    } catch (error) {
+        console.error('Failed to construct directory:', error);
+        res.status(500).json({ error: 'Failed to get directory' });
+    }
 });
 
-// 函数用于从JSON文件读取数据
-function readFullDataFromJSON() {
-    try {
-        // 同步读取文件内容
-        const jsonData = fs.readFileSync(dataFilePath, 'utf8');
-        // 解析JSON字符串为JavaScript对象
-        return JSON.parse(jsonData);
-    } catch (error) {
-        console.error("Error reading JSON data from file:", error);
-        // 处理错误，例如文件不存在或解析错误
-        return null;
-    }
-}
 
 function deleteTimeData(year, month, day, time) {
-    const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-    if (data[year] && data[year][month] && data[year][month][day] && data[year][month][day][time]) {
-        delete data[year][month][day][time];
-        fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2)); // 重新写入更新后的数据
+    const filePath = path.join(__dirname, 'data', year, month, day, `${time}.json`);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath); // 删除文件
         return true;
     }
     return false;
