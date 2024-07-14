@@ -63,13 +63,13 @@ function findFirstDataOfToday() {
 }
 
 //启动服务器
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
-
-// app.listen(1086, '0.0.0.0', () => {
-//     console.log(`Server is running on 1086`);
+// app.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`);
 // });
+
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on 1086`);
+});
 
 function startFetchTask() {
     const now = new Date();
@@ -141,7 +141,7 @@ async function fetchPluginData(previousData) {
 async function fetchPageData(url, previousData) {
     const browser = await puppeteer.launch({
         headless: true,
-        // executablePath: '/usr/bin/google-chrome',
+        executablePath: '/usr/bin/google-chrome',
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
