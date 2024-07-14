@@ -4,7 +4,7 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = 1086;
 
 puppeteer.use(StealthPlugin());
 app.use(express.static('public'));
@@ -59,8 +59,8 @@ function findPreviousData() {
 //     console.log(`Server is running on http://localhost:${port}`);
 // });
 
-app.listen(1086, '0.0.0.0', () => {
-    console.log(`Server is running on 1086`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on ${port}`);
 });
 
 function startFetchTask() {
