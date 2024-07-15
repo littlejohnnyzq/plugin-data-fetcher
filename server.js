@@ -18,12 +18,11 @@ const puppeteerConfig = {
 };
 
 // 存储数据
-function storeData(data) {
-    const now = new Date();
-    const year = now.getFullYear().toString();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const time = now.toTimeString().slice(0, 5).replace(/:/g, '-');
+function storeData(data, currentTime) {
+    const year = currentTime.getFullYear().toString();
+    const month = (currentTime.getMonth() + 1).toString().padStart(2, '0');
+    const day = currentTime.getDate().toString().padStart(2, '0');
+    const time = currentTime.toTimeString().slice(0, 5).replace(/:/, '-');
 
     const dirPath = path.join(__dirname, 'data', year, month, day);
 
@@ -40,42 +39,53 @@ function storeData(data) {
     }
 }
 
-function findFirstDataOfToday() {
-    const now = new Date();
-    const year = now.getFullYear().toString();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
+function storeDataAsEndOfDay(pluginData, previousDayTime) {
+    // 计算前一天的日期
+    const year = previousDayTime.getFullYear().toString();
+    const month = (previousDayTime.getMonth() + 1).toString().padStart(2, '0');
+    const day = previousDayTime.getDate().toString().padStart(2, '0');
+    
+    // 使用previousDayTime年月日作为存储路径
+    const dirPath = path.join(__dirname, 'data', year, month, day);
+    const filePath = path.join(dirPath, `24-00.json`); // 特意存为“24:00”标记一天的结束
+    
+    // 确保目录存在，如果不存在则递归创建
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // 写入数据到文件
+    fs.writeFileSync(filePath, JSON.stringify(pluginData, null, 2));
+}
+
+function findPreviousData(currentTime) {
+    previousDay = new Date(currentTime.getTime() - 86400000); // 减去一天的毫秒数
+
+    const year = previousDay.getFullYear().toString();
+    const month = (previousDay.getMonth() + 1).toString().padStart(2, '0');
+    const day = previousDay.getDate().toString().padStart(2, '0');
 
     // 检查目录是否存在
     const dirPath = path.join(__dirname, 'data', year, month, day);
     if (!fs.existsSync(dirPath)) {
-        console.log("No data for today.");
+        console.log(`No data directory found for ${year}-${month}-${day}.`);
         return null;
     }
 
-    // 读取目录中的所有文件，假设文件名是时间戳，如 "08-00.json"
+    // 读取目录中的所有文件，假设文件名是时间戳，如 "23-30.json"
     const files = fs.readdirSync(dirPath).filter(file => file.endsWith('.json'));
     if (files.length === 0) {
-        console.log("No data files found for today.");
+        console.log(`No data files found for ${year}-${month}-${day}.`);
         return null;
     }
 
-    // 对文件名进行排序以找到第一个文件，即最早的数据点
-    const firstFile = files.sort()[0];
-    const filePath = path.join(dirPath, firstFile);
-    const firstData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    // 对文件名进行排序以找到最后一个文件，即最晚的数据点
+    const lastFile = files.sort().pop();
+    const filePath = path.join(dirPath, lastFile);
+    const previousData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-    return firstData;
+    return previousData;
 }
-
-//启动服务器
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
-
-app.listen(1086, '0.0.0.0', () => {
-    console.log(`Server is running on 1086`);
-});
 
 function startFetchTask() {
     const now = new Date();
@@ -93,9 +103,21 @@ startFetchTask();
 
 async function fetchData() {
     try {
-        const previousData = findFirstDataOfToday();
-        const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
-        storeData(pluginData); // 存储当前数据
+        const now = new Date();
+        const isMidnight = now.getHours() === 0 && now.getMinutes() === 0;
+
+        if (isMidnight) {
+            const previousDayTime = new Date(now.getTime() - 86400000); // 减去一天的毫秒数
+            const previousData = findPreviousData(previousDayTime); // 改为传递当前时间
+            const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+            storeData(pluginData, now); // 将当前时间传递给storeData
+            storeDataAsEndOfDay(pluginData, previousDayTime); // 特殊处理：同时存储数据作为上一天的最后数据点
+
+        } else {
+            const previousData = findPreviousData(now); // 改为传递当前时间
+            const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+            storeData(pluginData, now); // 将当前时间传递给storeData
+        }
     } catch (error) {
         console.error('Error during fetchData:', error);
         // 这里你可以添加更多错误处理逻辑，比如记录错误到日志文件等
@@ -247,6 +269,19 @@ async function autoScroll(page) {
     });
 }
 
+});
+
+
+function deleteTimeData(year, month, day, time) {
+    const filePath = path.join(__dirname, 'data', year, month, day, `${time}.json`);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath); // 删除文件
+        return true;
+    }
+    return false;
+}
+
+
 app.delete('/delete-time-data', (req, res) => {
     const { year, month, day, time } = req.query;
     console.log(`Attempting to delete data for: ${year}-${month}-${day} at ${time}`);
@@ -282,14 +317,12 @@ app.get('/get-directory', (req, res) => {
         console.error('Failed to construct directory:', error);
         res.status(500).json({ error: 'Failed to get directory' });
     }
+
+//启动服务器
+// app.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`);
+// });
+
+app.listen(1086, '0.0.0.0', () => {
+    console.log(`Server is running on 1086`);
 });
-
-
-function deleteTimeData(year, month, day, time) {
-    const filePath = path.join(__dirname, 'data', year, month, day, `${time}.json`);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath); // 删除文件
-        return true;
-    }
-    return false;
-}
