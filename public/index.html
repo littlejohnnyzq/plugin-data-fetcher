@@ -139,7 +139,7 @@
         </div>
         <div class="table-area">
             <div id="toolbar" class="tool-bar">
-                <p id="dataTime" style="flex-grow: 1;"></p>
+                <p id="dataTime" style="flex-grow: 1; margin: 0;"></p>
                 <button id="fetchOnce-button">单次采集</button>
                 <button id="deleteBtn">删除本次数据</button>
             </div>
@@ -327,7 +327,7 @@
                     getData(year, month, day, time);
                     currentSelectedTimeDiv = timeDiv; // 设置当前选中的时间Div
                     deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, time);
-                    dataTimeText.textContent = `采集时间：${month}/${day} ${timeText}`;
+                    dataTimeText.textContent = `${month}/${day} ${timeText}`;
                 });
 
                 timesColumn.appendChild(timeDiv);
