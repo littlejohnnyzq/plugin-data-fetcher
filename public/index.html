@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" >
     <meta name="format-detection" content="telephone=no">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>插件用户数采集</title>
@@ -121,13 +121,13 @@
 
 <body>
     <h2>插件用户数采集</h2>
-    <div class="top-bar">
+    <!-- <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>
         <input type="number" style="width: 48px;" id="interval" value="30" disabled>
-        <!-- <button id="start-button">启动</button>
-        <button id="stop-button">停止</button> -->
-        <button id="fetchOnce-button">单次采集</button>
-    </div>
+        <button id="start-button">启动</button>
+        <button id="stop-button">停止</button>
+       
+    </div> -->
 
 
     <div class="container">
@@ -139,6 +139,8 @@
         </div>
         <div class="table-area">
             <div id="toolbar" class="tool-bar">
+                <p id="dataTime" style="flex-grow: 1;"></p>
+                <button id="fetchOnce-button">单次采集</button>
                 <button id="deleteBtn">删除本次数据</button>
             </div>
             <table id="data-table">
@@ -312,11 +314,12 @@
             const timesColumn = document.getElementById('times-column');
             timesColumn.innerHTML = '';
             timesColumn.classList.remove('hidden');
-
+            const dataTimeText = document.getElementById('dataTime');
             times.sort((a, b) => b.localeCompare(a)).forEach(time => {
                 const timeDiv = document.createElement('div');
                 const deleteBtn = document.getElementById('deleteBtn');
-                timeDiv.textContent = time;
+                const timeText = time.replace('-', ':');
+                timeDiv.textContent = timeText;
                 timeDiv.classList.add('time-label');
                 timeDiv.addEventListener('click', () => {
                     document.querySelectorAll('#times-column .time-label').forEach(el => el.classList.remove('active'));
@@ -324,6 +327,7 @@
                     getData(year, month, day, time);
                     currentSelectedTimeDiv = timeDiv; // 设置当前选中的时间Div
                     deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, time);
+                    dataTimeText.textContent = `采集时间：${month}/${day} ${timeText}`;
                 });
 
                 timesColumn.appendChild(timeDiv);
@@ -331,11 +335,13 @@
 
             // 默认显示第一个时间点的数据
             if (times.length > 0) {
+                const timeText = times[0].replace('-', ':');
                 const firstTimeDiv = timesColumn.querySelector('.time-label');
                 firstTimeDiv.classList.add('active');
                 getData(year, month, day, times[0]);
                 currentSelectedTimeDiv = firstTimeDiv; // 设置当前选中的时间Div
                 deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, times[0]);
+                dataTimeText.textContent = `采集时间：${month}/${day} ${timeText}`;
             }
         }
 
