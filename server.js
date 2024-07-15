@@ -11,6 +11,12 @@ app.use(express.static('public'));
 
 const dataFilePath = path.join(__dirname, 'structured_data.json');
 
+const puppeteerConfig = {
+    headless: true,
+    executablePath: '/usr/bin/google-chrome',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
+};
+
 // 存储数据
 function storeData(data) {
     const now = new Date();
@@ -67,26 +73,33 @@ function findFirstDataOfToday() {
 //     console.log(`Server is running on http://localhost:${port}`);
 // });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(1086, '0.0.0.0', () => {
     console.log(`Server is running on 1086`);
 });
 
 function startFetchTask() {
     const now = new Date();
     const millisTillNextHalfHour = 1800000 - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % 1800000;
-    
-    setTimeout(() => {
-        fetchData(); // 在接下来的半小时点执行
-        setInterval(fetchData, 1800000); // 每半小时执行一次
+
+    setTimeout(async () => {
+        await fetchData(); // 在接下来的半小时点执行
+        setInterval(async () => {
+            await fetchData(); // 每半小时执行一次
+        }, 1800000);
     }, millisTillNextHalfHour);
 }
 
 startFetchTask();
 
 async function fetchData() {
-    const previousData = findFirstDataOfToday();
-    const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
-    storeData(pluginData); // 存储当前数据
+    try {
+        const previousData = findFirstDataOfToday();
+        const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+        storeData(pluginData); // 存储当前数据
+    } catch (error) {
+        console.error('Error during fetchData:', error);
+        // 这里你可以添加更多错误处理逻辑，比如记录错误到日志文件等
+    }
 }
 
 // 读取指定日期和时间的数据
@@ -113,7 +126,7 @@ app.get('/fetch-plugin-data', async (req, res) => {
     }
 });
 
-async function fetchPluginData(previousData) {
+async function fetchPluginData(previousData, attempt = 1) {
     console.log('Starting Puppeteer');
 
     try {
@@ -133,55 +146,61 @@ async function fetchPluginData(previousData) {
         return pluginData;
 
     } catch (error) {
-        console.error('Error during Puppeteer execution:', error);
+        if (error instanceof puppeteer.errors.TimeoutError && attempt < 5) {
+            console.log(`Retrying ${url} attempt ${attempt + 1}`);
+            return fetchPageData(url, previousData, attempt + 1);
+        }
         throw error;
     }
 }
 
 async function fetchPageData(url, previousData) {
-    const browser = await puppeteer.launch({
-        headless: true,
-        executablePath: '/usr/bin/google-chrome',
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
-    await page.setJavaScriptEnabled(true);
-    await page.setViewport({ width: 1280, height: 800 });
-    await page.goto(url, {
-        waitUntil: 'networkidle2', timeout: 30000, 
-    });
-    await autoScroll(page);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
+    const browser = await puppeteer.launch(puppeteerConfig);
+    try {
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+        await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+        await page.setJavaScriptEnabled(true);
+        await page.setViewport({ width: 1280, height: 800 });
+        await page.goto(url, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+        });
+        await autoScroll(page);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
 
-    const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
-    const data = [];
-    for (const plugin of plugins) {
-        if (data.length >= 20) break;
+        const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
+        const data = [];
+        for (const plugin of plugins) {
+            if (data.length >= 20) break;
 
-        const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
-        const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
+            const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
+            const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
 
-        let preciseUsers = 'N/A';
-        if (usersElement) {
-            await usersElement.hover(); // Use hover from Puppeteer
-            await new Promise(resolve => setTimeout(resolve, 500)); // Manually create a timeout
-            preciseUsers = await usersElement.$eval('.dropdown--dropdownContents--BqcL5', el => el.innerText.match(/\d+/g).join(''));
+            let preciseUsers = 'N/A';
+            if (usersElement) {
+                await usersElement.hover(); // Use hover from Puppeteer
+                await new Promise(resolve => setTimeout(resolve, 500)); // Manually create a timeout
+                preciseUsers = await usersElement.$eval('.dropdown--dropdownContents--BqcL5', el => el.innerText.match(/\d+/g).join(''));
+            }
+
+            const currentUsers = parseInt(preciseUsers);
+            const sortName = name.slice(0, 20);
+            const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
+            const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
+            const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
+            const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
+
+            data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
         }
-
-        const currentUsers = parseInt(preciseUsers);
-        const sortName = name.slice(0, 20);
-        const previousPlugin = previousData ? previousData.find(p => p.name.slice(0, 20) === sortName) : null;
-        const previousUsers = previousPlugin ? parseInt(previousPlugin.users) : null;
-        const DoDCount = previousUsers ? currentUsers - previousUsers : '--';
-        const DoDPercent = previousUsers ? ((DoDCount / previousUsers) * 100).toFixed(2) + '%' : '--';
-
-        data.push({ name, users: preciseUsers, DoDCount: DoDCount.toString(), DoDPercent });
+        return data;
+    } catch (error) {
+        console.error('Error during page navigation and data scraping:', error);
+        return []; // 返回空数组或合适的默认值
+    } finally {
+        await browser.close(); // 确保无论成功还是失败，浏览器都被关闭
     }
-    await browser.close();
-    return data;
 }
 
 function constructDirectory() {
