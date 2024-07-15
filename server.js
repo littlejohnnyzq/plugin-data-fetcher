@@ -87,6 +87,15 @@ function findPreviousData(currentTime) {
     return previousData;
 }
 
+//启动服务器
+// app.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`);
+// });
+
+app.listen(1086, '0.0.0.0', () => {
+    console.log(`Server is running on 1086`);
+});
+
 function startFetchTask() {
     const now = new Date();
     const millisTillNextHalfHour = 1800000 - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % 1800000;
@@ -269,19 +278,6 @@ async function autoScroll(page) {
     });
 }
 
-});
-
-
-function deleteTimeData(year, month, day, time) {
-    const filePath = path.join(__dirname, 'data', year, month, day, `${time}.json`);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath); // 删除文件
-        return true;
-    }
-    return false;
-}
-
-
 app.delete('/delete-time-data', (req, res) => {
     const { year, month, day, time } = req.query;
     console.log(`Attempting to delete data for: ${year}-${month}-${day} at ${time}`);
@@ -317,12 +313,14 @@ app.get('/get-directory', (req, res) => {
         console.error('Failed to construct directory:', error);
         res.status(500).json({ error: 'Failed to get directory' });
     }
-
-//启动服务器
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
-
-app.listen(1086, '0.0.0.0', () => {
-    console.log(`Server is running on 1086`);
 });
+
+
+function deleteTimeData(year, month, day, time) {
+    const filePath = path.join(__dirname, 'data', year, month, day, `${time}.json`);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath); // 删除文件
+        return true;
+    }
+    return false;
+}
