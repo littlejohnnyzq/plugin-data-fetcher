@@ -162,7 +162,7 @@ async function fetchPluginData(previousData, attempt = 1) {
 
     try {
         const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
-        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=i+3D+extrude+shape&editor_type=all&price=all&creators=all';
+        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=3D+Vector&editor_type=all&price=all&creators=all';
 
         // Fetch data from the first URL
         const data1 = await fetchPageData(url1, previousData);
