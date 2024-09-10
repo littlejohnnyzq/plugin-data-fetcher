@@ -163,15 +163,13 @@ async function fetchPluginData(previousData, attempt = 1) {
     try {
         const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
         const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=3D+Vector&editor_type=all&price=all&creators=all';
-
+        const url3 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=animate&editor_type=all&price=all&creators=all';
         // Fetch data from the first URL
         const data1 = await fetchPageData(url1, previousData);
-
-        // Fetch data from the second URL
         const data2 = await fetchPageData(url2, previousData);
-
+        const data3 = await fetchPageData(url3, previousData);
         // Combine data from both pages
-        const pluginData = data1.concat(data2);
+        const pluginData = data1.concat(data2,data3);
 
         console.log('Puppeteer finished');
         return pluginData;
