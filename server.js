@@ -202,7 +202,7 @@ async function fetchPageData(url, previousData) {
         const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
         const data = [];
         for (const plugin of plugins) {
-            if (data.length >= 20) break;
+            if (data.length >= 15) break;
 
             const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
             const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
