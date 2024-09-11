@@ -162,8 +162,8 @@ async function fetchPluginData(previousData, attempt = 1) {
 
     try {
         const url1 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=chart&editor_type=all&price=all&creators=all';
-        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=3D+Vector&editor_type=all&price=all&creators=all';
-        const url3 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=animate&editor_type=all&price=all&creators=all';
+        const url2 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=inima&editor_type=all&price=all&creators=all';
+        const url3 = 'https://www.figma.com/community/search?resource_type=plugins&sort_by=relevancy&query=extrude&editor_type=all&price=all&creators=all';
         // Fetch data from the first URL
         const data1 = await fetchPageData(url1, previousData);
         const data2 = await fetchPageData(url2, previousData);
@@ -202,7 +202,7 @@ async function fetchPageData(url, previousData) {
         const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
         const data = [];
         for (const plugin of plugins) {
-            if (data.length >= 15) break;
+            if (data.length >= 12) break;
 
             const name = await plugin.$eval('.plugin_row--pluginRowTitle--GOOmC.text--fontPos13--xW8hS.text--_fontBase--QdLsd', el => el.innerText);
             const usersElement = await plugin.$('.plugin_row--toolTip--Uxz1M.dropdown--dropdown--IX0tU.text--fontPos14--OL9Hp.text--_fontBase--QdLsd.plugin_row--toolTipPositioning--OgVuh');
