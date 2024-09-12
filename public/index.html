@@ -379,16 +379,17 @@
                 }
                 row.appendChild(DoDCountCell);
 
-                const DoDPercentCell = document.createElement('td');
-                DoDPercentCell.textContent = entry.DoDPercent;
-                row.appendChild(DoDPercentCell);
+                // const DoDPercentCell = document.createElement('td');
+                // DoDPercentCell.textContent = entry.DoDPercent;
+                // row.appendChild(DoDPercentCell);
 
                 dataBody.appendChild(row);
                 if (entry.name.includes('i Chart') || entry.name.includes('Extrude 3D') || entry.name.includes('inima -')) {
                     row.style.backgroundColor = '#eee8ff';
-                } else if (entry.name.includes('Chart Master 3001')) {
-                    row.style.backgroundColor = '#ffffdd';
                 }
+                // else if (entry.name.includes('Chart Master 3001')) {
+                //     row.style.backgroundColor = '#ffffdd';
+                // }
             });
         }
         function deleteCurrentEntry(year, month, day, time) {
