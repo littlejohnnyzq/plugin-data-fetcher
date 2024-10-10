@@ -192,16 +192,12 @@ async function fetchPageData(url, previousData) {
         await page.setJavaScriptEnabled(true);
         await page.setViewport({ width: 1280, height: 800 });
         await page.goto(url, {
-            waitUntil: 'networkidle0',
+            waitUntil: 'domcontentloaded',
             timeout: 30000
         });
         await autoScroll(page);
-
-        // 等待特定元素加载完成，确保数据已经加载
-        await page.waitForFunction(
-            'document.querySelector(".plugin_row--pluginRow--lySkC") && document.querySelector(".plugin_row--pluginRow--lySkC").innerText.includes("users")',
-            { timeout: 10000 }
-        );
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
 
         const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
         const data = [];
