@@ -196,7 +196,7 @@ async function fetchPageData(url, previousData) {
             timeout: 30000
         });
         await autoScroll(page);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
 
         const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
