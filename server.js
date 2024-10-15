@@ -193,11 +193,11 @@ async function fetchPageData(url, previousData) {
         await page.setViewport({ width: 1280, height: 800 });
         await page.goto(url, {
             waitUntil: 'domcontentloaded',
-            timeout: 30000
+            timeout: 20000
         });
         await autoScroll(page);
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 8000 });
+        await new Promise(resolve => setTimeout(resolve, 8000));
+        await page.waitForSelector('.plugin_row--pluginRow--lySkC', { timeout: 7000 });
 
         const plugins = await page.$$('.plugin_row--pluginRow--lySkC');
         const data = [];
@@ -210,7 +210,7 @@ async function fetchPageData(url, previousData) {
             let preciseUsers = 'N/A';
             if (usersElement) {
                 await usersElement.hover(); // Use hover from Puppeteer
-                await new Promise(resolve => setTimeout(resolve, 500)); // Manually create a timeout
+                await new Promise(resolve => setTimeout(resolve, 400)); // Manually create a timeout
                 preciseUsers = await usersElement.$eval('.dropdown--dropdownContents--BqcL5', el => el.innerText.match(/\d+/g).join(''));
             }
 
