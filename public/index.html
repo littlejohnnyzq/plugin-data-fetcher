@@ -2,13 +2,14 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" >
+    <meta name="format-detection" content="telephone=no">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>插件用户数采集</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 12px;
         }
 
         h2 {
@@ -54,6 +55,8 @@
             padding: 8px;
             max-height: 26px;
             text-align: left;
+            font-size: 13px;
+            font-weight: 400;
         }
 
         #data-table th {
@@ -120,13 +123,13 @@
 
 <body>
     <h2>插件用户数采集</h2>
-    <div class="top-bar">
+    <!-- <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>
         <input type="number" style="width: 48px;" id="interval" value="30" disabled>
-        <!-- <button id="start-button">启动</button>
-        <button id="stop-button">停止</button> -->
-        <button id="fetchOnce-button">单次采集</button>
-    </div>
+        <button id="start-button">启动</button>
+        <button id="stop-button">停止</button>
+       
+    </div> -->
 
 
     <div class="container">
@@ -138,8 +141,9 @@
         </div>
         <div class="table-area">
             <div id="toolbar" class="tool-bar">
+                <p id="dataTime" style="flex-grow: 1; margin: 0;"></p>
+                <button id="fetchOnce-button">单次采集</button>
                 <button id="deleteBtn">删除本次数据</button>
-                <button id="refreshLocal">刷新本地缓存</button>
             </div>
             <table id="data-table">
                 <thead>
@@ -147,8 +151,9 @@
                         <th></th>
                         <th>插件名</th>
                         <th>用户数</th>
-                        <th style="border-right: none; white-space: nowrap;">日增</th>
-                        <th style="border-left: none;"></th>
+                        <th>日增</th>
+                        <th>点赞</th>
+                        <th>日增</th>
                     </tr>
                 </thead>
                 <tbody id="data-body">
@@ -312,11 +317,12 @@
             const timesColumn = document.getElementById('times-column');
             timesColumn.innerHTML = '';
             timesColumn.classList.remove('hidden');
-
+            const dataTimeText = document.getElementById('dataTime');
             times.sort((a, b) => b.localeCompare(a)).forEach(time => {
                 const timeDiv = document.createElement('div');
                 const deleteBtn = document.getElementById('deleteBtn');
-                timeDiv.textContent = time;
+                const timeText = time.replace('-', ':');
+                timeDiv.textContent = timeText;
                 timeDiv.classList.add('time-label');
                 timeDiv.addEventListener('click', () => {
                     document.querySelectorAll('#times-column .time-label').forEach(el => el.classList.remove('active'));
@@ -324,6 +330,7 @@
                     getData(year, month, day, time);
                     currentSelectedTimeDiv = timeDiv; // 设置当前选中的时间Div
                     deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, time);
+                    dataTimeText.textContent = `${month}/${day} ${timeText}`;
                 });
 
                 timesColumn.appendChild(timeDiv);
@@ -331,38 +338,42 @@
 
             // 默认显示第一个时间点的数据
             if (times.length > 0) {
+                const timeText = times[0].replace('-', ':');
                 const firstTimeDiv = timesColumn.querySelector('.time-label');
                 firstTimeDiv.classList.add('active');
                 getData(year, month, day, times[0]);
                 currentSelectedTimeDiv = firstTimeDiv; // 设置当前选中的时间Div
                 deleteBtn.onclick = () => deleteCurrentEntry(year, month, day, times[0]);
+                dataTimeText.textContent = `${month}/${day} ${timeText}`;
             }
         }
 
         function displayData(entries) {
-            // console.log(entries)
             const dataBody = document.getElementById('data-body');
             dataBody.innerHTML = '';
-            // console.log('接受到的数据：', entries);
 
             entries.forEach((entry, index) => {
                 const row = document.createElement('tr');
 
+                // 序号列
                 const indexCell = document.createElement('td');
                 indexCell.textContent = index + 1;
                 row.appendChild(indexCell);
 
+                // 插件名列
                 const nameCell = document.createElement('td');
-                row.appendChild(nameCell);
                 const nameSpan = document.createElement('div');
                 nameSpan.textContent = entry.name;
                 nameSpan.classList.add('ellipsis');
-                nameCell.appendChild(nameSpan)
+                nameCell.appendChild(nameSpan);
+                row.appendChild(nameCell);
 
+                // 用户数列
                 const usersCell = document.createElement('td');
                 usersCell.textContent = entry.users;
                 row.appendChild(usersCell);
 
+                // 用户日增列
                 const DoDCountCell = document.createElement('td');
                 DoDCountCell.textContent = entry.DoDCount;
                 const DoDCount = parseInt(entry.DoDCount, 10);
@@ -373,15 +384,25 @@
                 }
                 row.appendChild(DoDCountCell);
 
-                const DoDPercentCell = document.createElement('td');
-                DoDPercentCell.textContent = entry.DoDPercent;
-                row.appendChild(DoDPercentCell);
+                // 点赞数列
+                const likesCell = document.createElement('td');
+                likesCell.textContent = entry.likes;
+                row.appendChild(likesCell);
+
+                // 点赞日增列
+                const DoDLikesCell = document.createElement('td');
+                DoDLikesCell.textContent = entry.DoDLikes;
+                const DoDLikes = parseInt(entry.DoDLikes, 10);
+                if (DoDLikes >= 100 && DoDLikes < 200) {
+                    DoDLikesCell.style.color = '#f06010';
+                } else if (DoDLikes >= 200) {
+                    DoDLikesCell.style.color = '#bb0060';
+                }
+                row.appendChild(DoDLikesCell);
 
                 dataBody.appendChild(row);
-                if (entry.name.includes('i Chart') || entry.name.includes('i 3D')) {
+                if (entry.name.includes('i Chart') || entry.name.includes('i 3D') || entry.name.includes('inima')) {
                     row.style.backgroundColor = '#eee8ff';
-                } else if (entry.name.includes('Chart Master 3001')) {
-                    row.style.backgroundColor = '#ffffdd';
                 }
             });
         }
@@ -389,34 +410,55 @@
             if (!confirm('确定删除这组采集数据?')) {
                 return; // 用户取消操作
             }
+
+            const deleteBtn = document.getElementById('deleteBtn');
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = '删除中...';
+
             removeData(year, month, day, time, () => {
-                const nextTimeDiv = currentSelectedTimeDiv.nextElementSibling || currentSelectedTimeDiv.previousElementSibling;
-                currentSelectedTimeDiv.parentNode.removeChild(currentSelectedTimeDiv);
+                // 找到当前选中的时间点
+                const currentTimeDiv = document.querySelector('#times-column .time-label.active');
+                if (!currentTimeDiv) return;
+
+                // 找到下一个或上一个时间点
+                const nextTimeDiv = currentTimeDiv.nextElementSibling || currentTimeDiv.previousElementSibling;
+                
+                // 移除当前时间点
+                currentTimeDiv.parentNode.removeChild(currentTimeDiv);
+                
+                // 如果还有其他时间点，选中下一个
                 if (nextTimeDiv) {
-                    nextTimeDiv.click(); // 触发下一个标签的点击事件，显示数据
+                    nextTimeDiv.click();
+                } else {
+                    // 如果没有其他时间点，刷新目录
+                    fetchDirectory();
                 }
-                // console.log(nextTimeDiv);
-                currentSelectedTimeDiv = null; // 清除引用
+
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = '删除本次数据';
             });
         }
 
         function removeData(year, month, day, time, callback) {
-            // console.log(year, month, day, time);
             fetch(`/delete-time-data?year=${year}&month=${month}&day=${day}&time=${time}`, {
                 method: 'DELETE'
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        callback();
-                    } else {
-                        alert('Failed to delete data');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error deleting time data:', error);
-                    alert('Error deleting data');
-                });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    callback();
+                } else {
+                    alert(data.error || '删除失败');
+                    document.getElementById('deleteBtn').disabled = false;
+                    document.getElementById('deleteBtn').textContent = '删除本次数据';
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting time data:', error);
+                alert('删除失败，请重试');
+                document.getElementById('deleteBtn').disabled = false;
+                document.getElementById('deleteBtn').textContent = '删除本次数据';
+            });
         }
     </script>
 </body>

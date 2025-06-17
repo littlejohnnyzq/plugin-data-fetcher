@@ -66,68 +66,6 @@
         ]
       },
       "12": {
-        "08:56": [
-          {
-            "name": "Charts",
-            "users": "426347",
-            "DoDCount": "188",
-            "DoDPercent": "0.04%"
-          },
-          {
-            "name": "NB Charts",
-            "users": "177193",
-            "DoDCount": "83",
-            "DoDPercent": "0.05%"
-          },
-          {
-            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
-            "users": "14318",
-            "DoDCount": "63",
-            "DoDPercent": "0.44%"
-          },
-          {
-            "name": "Chartline",
-            "users": "107719",
-            "DoDCount": "43",
-            "DoDPercent": "0.04%"
-          },
-          {
-            "name": "ChartGen (Beta)",
-            "users": "38335",
-            "DoDCount": "18",
-            "DoDPercent": "0.05%"
-          },
-          {
-            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
-            "users": "3256",
-            "DoDCount": "48",
-            "DoDPercent": "1.50%"
-          },
-          {
-            "name": "Chart",
-            "users": "355531",
-            "DoDCount": "80",
-            "DoDPercent": "0.02%"
-          },
-          {
-            "name": "Charts Modifier",
-            "users": "13608",
-            "DoDCount": "9",
-            "DoDPercent": "0.07%"
-          },
-          {
-            "name": "Bar charts",
-            "users": "8869",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Figma Charts",
-            "users": "9934",
-            "DoDCount": "33",
-            "DoDPercent": "0.33%"
-          }
-        ],
         "09:00": [
           {
             "name": "Charts",
@@ -139,110 +77,6 @@
             "name": "NB Charts",
             "users": "177193",
             "DoDCount": "83",
-            "DoDPercent": "0.05%"
-          },
-          {
-            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
-            "users": "14318",
-            "DoDCount": "63",
-            "DoDPercent": "0.44%"
-          },
-          {
-            "name": "Chartline",
-            "users": "107719",
-            "DoDCount": "43",
-            "DoDPercent": "0.04%"
-          },
-          {
-            "name": "ChartGen (Beta)",
-            "users": "38335",
-            "DoDCount": "18",
-            "DoDPercent": "0.05%"
-          },
-          {
-            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
-            "users": "3256",
-            "DoDCount": "48",
-            "DoDPercent": "1.50%"
-          },
-          {
-            "name": "Chart",
-            "users": "355532",
-            "DoDCount": "81",
-            "DoDPercent": "0.02%"
-          },
-          {
-            "name": "Charts Modifier",
-            "users": "13608",
-            "DoDCount": "9",
-            "DoDPercent": "0.07%"
-          },
-          {
-            "name": "Bar charts",
-            "users": "8869",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Figma Charts",
-            "users": "9934",
-            "DoDCount": "33",
-            "DoDPercent": "0.33%"
-          },
-          {
-            "name": "Auto Layout Bar Charts",
-            "users": "9663",
-            "DoDCount": "7",
-            "DoDPercent": "0.07%"
-          },
-          {
-            "name": "Bar Charts",
-            "users": "8020",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Auto Layout Column Charts",
-            "users": "4533",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Waterfal charts",
-            "users": "2798",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Chart Maker",
-            "users": "54529",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "Flow chart",
-            "users": "61213",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          },
-          {
-            "name": "pie chart",
-            "users": "28857",
-            "DoDCount": "--",
-            "DoDPercent": "--"
-          }
-        ],
-        "09:07": [
-          {
-            "name": "Charts",
-            "users": "426348",
-            "DoDCount": "189",
-            "DoDPercent": "0.04%"
-          },
-          {
-            "name": "NB Charts",
-            "users": "177194",
-            "DoDCount": "84",
             "DoDPercent": "0.05%"
           },
           {
@@ -804,6 +638,3598 @@
             "users": "12682",
             "DoDCount": "--",
             "DoDPercent": "--"
+          }
+        ],
+        "12:11": [
+          {
+            "name": "Charts",
+            "users": "426385",
+            "DoDCount": "226",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177213",
+            "DoDCount": "103",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14328",
+            "DoDCount": "73",
+            "DoDPercent": "0.51%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107729",
+            "DoDCount": "53",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38338",
+            "DoDCount": "21",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3277",
+            "DoDCount": "69",
+            "DoDPercent": "2.15%"
+          },
+          {
+            "name": "Chart",
+            "users": "355552",
+            "DoDCount": "101",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13610",
+            "DoDCount": "11",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9939",
+            "DoDCount": "38",
+            "DoDPercent": "0.38%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9664",
+            "DoDCount": "8",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8871",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8020",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4533",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2798",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61225",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54536",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28862",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22347",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18127",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14371",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "12:30": [
+          {
+            "name": "Charts",
+            "users": "426389",
+            "DoDCount": "230",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177215",
+            "DoDCount": "105",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14329",
+            "DoDCount": "74",
+            "DoDPercent": "0.52%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107731",
+            "DoDCount": "55",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38340",
+            "DoDCount": "23",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3277",
+            "DoDCount": "69",
+            "DoDPercent": "2.15%"
+          },
+          {
+            "name": "Chart",
+            "users": "355553",
+            "DoDCount": "102",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13610",
+            "DoDCount": "11",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9940",
+            "DoDCount": "39",
+            "DoDPercent": "0.39%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8871",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9664",
+            "DoDCount": "8",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8020",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4533",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2798",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61226",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28862",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "13:00": [
+          {
+            "name": "Charts",
+            "users": "426405",
+            "DoDCount": "246",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177219",
+            "DoDCount": "109",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14334",
+            "DoDCount": "79",
+            "DoDPercent": "0.55%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107736",
+            "DoDCount": "60",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38341",
+            "DoDCount": "24",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart",
+            "users": "355557",
+            "DoDCount": "106",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3279",
+            "DoDCount": "71",
+            "DoDPercent": "2.21%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13611",
+            "DoDCount": "12",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9943",
+            "DoDCount": "42",
+            "DoDPercent": "0.42%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9666",
+            "DoDCount": "10",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8871",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8021",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4533",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2799",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61228",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28862",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22347",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18128",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14373",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "13:30": [
+          {
+            "name": "Charts",
+            "users": "426408",
+            "DoDCount": "249",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177222",
+            "DoDCount": "112",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14335",
+            "DoDCount": "80",
+            "DoDPercent": "0.56%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107740",
+            "DoDCount": "64",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38342",
+            "DoDCount": "25",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart",
+            "users": "355560",
+            "DoDCount": "109",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3280",
+            "DoDCount": "72",
+            "DoDPercent": "2.24%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13611",
+            "DoDCount": "12",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9666",
+            "DoDCount": "10",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8871",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9945",
+            "DoDCount": "44",
+            "DoDPercent": "0.44%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8021",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4534",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2799",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61232",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28862",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22347",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18130",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14373",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "14:00": [
+          {
+            "name": "Charts",
+            "users": "426417",
+            "DoDCount": "258",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177226",
+            "DoDCount": "116",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14339",
+            "DoDCount": "84",
+            "DoDPercent": "0.59%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107741",
+            "DoDCount": "65",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38342",
+            "DoDCount": "25",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart",
+            "users": "355561",
+            "DoDCount": "110",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3281",
+            "DoDCount": "73",
+            "DoDPercent": "2.28%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13612",
+            "DoDCount": "13",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9666",
+            "DoDCount": "10",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9946",
+            "DoDCount": "45",
+            "DoDPercent": "0.45%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8873",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8022",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4535",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2799",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61236",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28863",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22347",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18130",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14374",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "14:30": [
+          {
+            "name": "Charts",
+            "users": "426427",
+            "DoDCount": "268",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177231",
+            "DoDCount": "121",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14341",
+            "DoDCount": "86",
+            "DoDPercent": "0.60%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107744",
+            "DoDCount": "68",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38342",
+            "DoDCount": "25",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3282",
+            "DoDCount": "74",
+            "DoDPercent": "2.31%"
+          },
+          {
+            "name": "Chart",
+            "users": "355562",
+            "DoDCount": "111",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13613",
+            "DoDCount": "14",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8873",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9949",
+            "DoDCount": "48",
+            "DoDPercent": "0.48%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9667",
+            "DoDCount": "11",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8022",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4535",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54538",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61239",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28863",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22348",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18130",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14374",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "15:00": [
+          {
+            "name": "Charts",
+            "users": "426436",
+            "DoDCount": "277",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177236",
+            "DoDCount": "126",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14345",
+            "DoDCount": "90",
+            "DoDPercent": "0.63%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107749",
+            "DoDCount": "73",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38346",
+            "DoDCount": "29",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart",
+            "users": "355569",
+            "DoDCount": "118",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3288",
+            "DoDCount": "80",
+            "DoDPercent": "2.49%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13614",
+            "DoDCount": "15",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9668",
+            "DoDCount": "12",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8874",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9953",
+            "DoDCount": "52",
+            "DoDPercent": "0.53%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8023",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4536",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54539",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61243",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28865",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22348",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18130",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14375",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "15:30": [
+          {
+            "name": "Charts",
+            "users": "426450",
+            "DoDCount": "291",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177239",
+            "DoDCount": "129",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14353",
+            "DoDCount": "98",
+            "DoDPercent": "0.69%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107750",
+            "DoDCount": "74",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38346",
+            "DoDCount": "29",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart",
+            "users": "355575",
+            "DoDCount": "124",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3295",
+            "DoDCount": "87",
+            "DoDPercent": "2.71%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13615",
+            "DoDCount": "16",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9668",
+            "DoDCount": "12",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9956",
+            "DoDCount": "55",
+            "DoDPercent": "0.56%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8874",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8024",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4536",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61249",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54541",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28865",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22349",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18130",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14376",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "16:00": [
+          {
+            "name": "Charts",
+            "users": "426461",
+            "DoDCount": "302",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177242",
+            "DoDCount": "132",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14358",
+            "DoDCount": "103",
+            "DoDPercent": "0.72%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107754",
+            "DoDCount": "78",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38347",
+            "DoDCount": "30",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart",
+            "users": "355581",
+            "DoDCount": "130",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3302",
+            "DoDCount": "94",
+            "DoDPercent": "2.93%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13616",
+            "DoDCount": "17",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9668",
+            "DoDCount": "12",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8875",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9957",
+            "DoDCount": "56",
+            "DoDPercent": "0.57%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8025",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54542",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61256",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28868",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22350",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18132",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14377",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "16:30": [
+          {
+            "name": "Charts",
+            "users": "426474",
+            "DoDCount": "315",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177249",
+            "DoDCount": "139",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14361",
+            "DoDCount": "106",
+            "DoDPercent": "0.74%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107760",
+            "DoDCount": "84",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38348",
+            "DoDCount": "31",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3304",
+            "DoDCount": "96",
+            "DoDPercent": "2.99%"
+          },
+          {
+            "name": "Chart",
+            "users": "355585",
+            "DoDCount": "134",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13617",
+            "DoDCount": "18",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9668",
+            "DoDCount": "12",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8026",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9957",
+            "DoDCount": "56",
+            "DoDPercent": "0.57%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8875",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61258",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54542",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28869",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22350",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18132",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14377",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "17:00": [
+          {
+            "name": "Charts",
+            "users": "426486",
+            "DoDCount": "327",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177256",
+            "DoDCount": "146",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14364",
+            "DoDCount": "109",
+            "DoDPercent": "0.76%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107766",
+            "DoDCount": "90",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38349",
+            "DoDCount": "32",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart",
+            "users": "355590",
+            "DoDCount": "139",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3309",
+            "DoDCount": "101",
+            "DoDPercent": "3.15%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13617",
+            "DoDCount": "18",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9963",
+            "DoDCount": "62",
+            "DoDPercent": "0.63%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9668",
+            "DoDCount": "12",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8876",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8026",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4537",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2800",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61263",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54543",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28869",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "19:15": [
+          {
+            "name": "Charts",
+            "users": "426539",
+            "DoDCount": "380",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177280",
+            "DoDCount": "170",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14382",
+            "DoDCount": "127",
+            "DoDPercent": "0.89%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107780",
+            "DoDCount": "104",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38356",
+            "DoDCount": "39",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3325",
+            "DoDCount": "117",
+            "DoDPercent": "3.65%"
+          },
+          {
+            "name": "Chart",
+            "users": "355606",
+            "DoDCount": "155",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13622",
+            "DoDCount": "23",
+            "DoDPercent": "0.17%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9670",
+            "DoDCount": "14",
+            "DoDPercent": "0.14%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9972",
+            "DoDCount": "71",
+            "DoDPercent": "0.72%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8032",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8883",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4538",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2801",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61278",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54550",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28878",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22354",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18133",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14379",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2358",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195859",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39850",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Shapes",
+            "users": "73452",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "22:30": [
+          {
+            "name": "Charts",
+            "users": "426595",
+            "DoDCount": "436",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177309",
+            "DoDCount": "199",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14412",
+            "DoDCount": "157",
+            "DoDPercent": "1.10%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107794",
+            "DoDCount": "118",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38364",
+            "DoDCount": "47",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Chart",
+            "users": "355632",
+            "DoDCount": "181",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3344",
+            "DoDCount": "136",
+            "DoDPercent": "4.24%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13627",
+            "DoDCount": "28",
+            "DoDPercent": "0.21%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9980",
+            "DoDCount": "79",
+            "DoDPercent": "0.80%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9671",
+            "DoDCount": "15",
+            "DoDPercent": "0.16%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8887",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8038",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4539",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2801",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61296",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54553",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28895",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22357",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18138",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14382",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2381",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195881",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39863",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Shapes",
+            "users": "73468",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "23:00": [
+          {
+            "name": "Charts",
+            "users": "426600",
+            "DoDCount": "441",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177314",
+            "DoDCount": "204",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14415",
+            "DoDCount": "160",
+            "DoDPercent": "1.12%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107795",
+            "DoDCount": "119",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38364",
+            "DoDCount": "47",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3346",
+            "DoDCount": "138",
+            "DoDPercent": "4.30%"
+          },
+          {
+            "name": "Chart",
+            "users": "355635",
+            "DoDCount": "184",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13627",
+            "DoDCount": "28",
+            "DoDPercent": "0.21%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8039",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9671",
+            "DoDCount": "15",
+            "DoDPercent": "0.16%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9982",
+            "DoDCount": "81",
+            "DoDPercent": "0.82%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8887",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4539",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2801",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61299",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54554",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28896",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22357",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18141",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14382",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2382",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195886",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39865",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Shapes",
+            "users": "73469",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ],
+        "23:30": [
+          {
+            "name": "Charts",
+            "users": "426613",
+            "DoDCount": "454",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177315",
+            "DoDCount": "205",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14419",
+            "DoDCount": "164",
+            "DoDPercent": "1.15%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107798",
+            "DoDCount": "122",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38365",
+            "DoDCount": "48",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3348",
+            "DoDCount": "140",
+            "DoDPercent": "4.36%"
+          },
+          {
+            "name": "Chart",
+            "users": "355638",
+            "DoDCount": "187",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13627",
+            "DoDCount": "28",
+            "DoDPercent": "0.21%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "9983",
+            "DoDCount": "82",
+            "DoDPercent": "0.83%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9672",
+            "DoDCount": "16",
+            "DoDPercent": "0.17%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8040",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8889",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4539",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2801",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61300",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54556",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "pie chart",
+            "users": "28898",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2387",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195887",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39867",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Shapes",
+            "users": "73471",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          }
+        ]
+      },
+      "13": {
+        "16:07": [
+          {
+            "name": "Charts",
+            "users": "426731",
+            "DoDCount": "118",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177367",
+            "DoDCount": "52",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14459",
+            "DoDCount": "40",
+            "DoDPercent": "0.28%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107830",
+            "DoDCount": "32",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38377",
+            "DoDCount": "12",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3375",
+            "DoDCount": "27",
+            "DoDPercent": "0.81%"
+          },
+          {
+            "name": "Chart",
+            "users": "355683",
+            "DoDCount": "45",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13631",
+            "DoDCount": "4",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10002",
+            "DoDCount": "19",
+            "DoDPercent": "0.19%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9676",
+            "DoDCount": "4",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8897",
+            "DoDCount": "8",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8048",
+            "DoDCount": "8",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61327",
+            "DoDCount": "27",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54566",
+            "DoDCount": "10",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28924",
+            "DoDCount": "26",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2443",
+            "DoDCount": "56",
+            "DoDPercent": "2.35%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195954",
+            "DoDCount": "67",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39886",
+            "DoDCount": "19",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73513",
+            "DoDCount": "42",
+            "DoDPercent": "0.06%"
+          }
+        ],
+        "16:30": [
+          {
+            "name": "Charts",
+            "users": "426735",
+            "DoDCount": "122",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177368",
+            "DoDCount": "53",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14459",
+            "DoDCount": "40",
+            "DoDPercent": "0.28%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107830",
+            "DoDCount": "32",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38378",
+            "DoDCount": "13",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3376",
+            "DoDCount": "28",
+            "DoDPercent": "0.84%"
+          },
+          {
+            "name": "Chart",
+            "users": "355687",
+            "DoDCount": "49",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13631",
+            "DoDCount": "4",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9676",
+            "DoDCount": "4",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10003",
+            "DoDCount": "20",
+            "DoDPercent": "0.20%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8897",
+            "DoDCount": "8",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8048",
+            "DoDCount": "8",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54566",
+            "DoDCount": "10",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61327",
+            "DoDCount": "27",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28925",
+            "DoDCount": "27",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22362",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18153",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14392",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2445",
+            "DoDCount": "58",
+            "DoDPercent": "2.43%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195955",
+            "DoDCount": "68",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39886",
+            "DoDCount": "19",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73517",
+            "DoDCount": "46",
+            "DoDPercent": "0.06%"
+          }
+        ],
+        "17:04": [
+          {
+            "name": "Charts",
+            "users": "426741",
+            "DoDCount": "128",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177372",
+            "DoDCount": "57",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14460",
+            "DoDCount": "41",
+            "DoDPercent": "0.28%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107835",
+            "DoDCount": "37",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38380",
+            "DoDCount": "15",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart",
+            "users": "355689",
+            "DoDCount": "51",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3377",
+            "DoDCount": "29",
+            "DoDPercent": "0.87%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13633",
+            "DoDCount": "6",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9677",
+            "DoDCount": "5",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10005",
+            "DoDCount": "22",
+            "DoDPercent": "0.22%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8898",
+            "DoDCount": "9",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8049",
+            "DoDCount": "9",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54566",
+            "DoDCount": "10",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61328",
+            "DoDCount": "28",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28926",
+            "DoDCount": "28",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22362",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18153",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12705",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2449",
+            "DoDCount": "62",
+            "DoDPercent": "2.60%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195957",
+            "DoDCount": "70",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39887",
+            "DoDCount": "20",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73519",
+            "DoDCount": "48",
+            "DoDPercent": "0.07%"
+          }
+        ],
+        "17:36": [
+          {
+            "name": "Charts",
+            "users": "426750",
+            "DoDCount": "137",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177375",
+            "DoDCount": "60",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14462",
+            "DoDCount": "43",
+            "DoDPercent": "0.30%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107837",
+            "DoDCount": "39",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38380",
+            "DoDCount": "15",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3380",
+            "DoDCount": "32",
+            "DoDPercent": "0.96%"
+          },
+          {
+            "name": "Chart",
+            "users": "355689",
+            "DoDCount": "51",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13633",
+            "DoDCount": "6",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9677",
+            "DoDCount": "5",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10007",
+            "DoDCount": "24",
+            "DoDPercent": "0.24%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8898",
+            "DoDCount": "9",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8050",
+            "DoDCount": "10",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54566",
+            "DoDCount": "10",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61328",
+            "DoDCount": "28",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28928",
+            "DoDCount": "30",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22362",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18153",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14393",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2453",
+            "DoDCount": "66",
+            "DoDPercent": "2.76%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195960",
+            "DoDCount": "73",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39888",
+            "DoDCount": "21",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73520",
+            "DoDCount": "49",
+            "DoDPercent": "0.07%"
+          }
+        ],
+        "18:06": [
+          {
+            "name": "Charts",
+            "users": "426759",
+            "DoDCount": "146",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177377",
+            "DoDCount": "62",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14466",
+            "DoDCount": "47",
+            "DoDPercent": "0.33%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107840",
+            "DoDCount": "42",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38382",
+            "DoDCount": "17",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3381",
+            "DoDCount": "33",
+            "DoDPercent": "0.99%"
+          },
+          {
+            "name": "Chart",
+            "users": "355691",
+            "DoDCount": "53",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13634",
+            "DoDCount": "7",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9677",
+            "DoDCount": "5",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8898",
+            "DoDCount": "9",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10008",
+            "DoDCount": "25",
+            "DoDPercent": "0.25%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8051",
+            "DoDCount": "11",
+            "DoDPercent": "0.14%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54568",
+            "DoDCount": "12",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61330",
+            "DoDCount": "30",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28930",
+            "DoDCount": "32",
+            "DoDPercent": "0.11%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22362",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18153",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12706",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2455",
+            "DoDCount": "68",
+            "DoDPercent": "2.85%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195964",
+            "DoDCount": "77",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39888",
+            "DoDCount": "21",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73525",
+            "DoDCount": "54",
+            "DoDPercent": "0.07%"
+          }
+        ],
+        "20:11": [
+          {
+            "name": "Charts",
+            "users": "426782",
+            "DoDCount": "169",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177387",
+            "DoDCount": "72",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14478",
+            "DoDCount": "59",
+            "DoDPercent": "0.41%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107849",
+            "DoDCount": "51",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38383",
+            "DoDCount": "18",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3386",
+            "DoDCount": "38",
+            "DoDPercent": "1.14%"
+          },
+          {
+            "name": "Chart",
+            "users": "355698",
+            "DoDCount": "60",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13635",
+            "DoDCount": "8",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10011",
+            "DoDCount": "28",
+            "DoDPercent": "0.28%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8900",
+            "DoDCount": "11",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8051",
+            "DoDCount": "11",
+            "DoDPercent": "0.14%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61338",
+            "DoDCount": "38",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54569",
+            "DoDCount": "13",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28935",
+            "DoDCount": "37",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2465",
+            "DoDCount": "78",
+            "DoDPercent": "3.27%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195979",
+            "DoDCount": "92",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39896",
+            "DoDCount": "29",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73533",
+            "DoDCount": "62",
+            "DoDPercent": "0.08%"
+          }
+        ],
+        "20:19": [
+          {
+            "name": "Charts",
+            "users": "426783",
+            "DoDCount": "170",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177388",
+            "DoDCount": "73",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14480",
+            "DoDCount": "61",
+            "DoDPercent": "0.42%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107851",
+            "DoDCount": "53",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38383",
+            "DoDCount": "18",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart",
+            "users": "355700",
+            "DoDCount": "62",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3386",
+            "DoDCount": "38",
+            "DoDPercent": "1.14%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13635",
+            "DoDCount": "8",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8900",
+            "DoDCount": "11",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10011",
+            "DoDCount": "28",
+            "DoDPercent": "0.28%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8052",
+            "DoDCount": "12",
+            "DoDPercent": "0.15%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2802",
+            "DoDCount": "1",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54569",
+            "DoDCount": "13",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61338",
+            "DoDCount": "38",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28936",
+            "DoDCount": "38",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22364",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18154",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14394",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2465",
+            "DoDCount": "78",
+            "DoDPercent": "3.27%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195984",
+            "DoDCount": "97",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39897",
+            "DoDCount": "30",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73534",
+            "DoDCount": "63",
+            "DoDPercent": "0.09%"
+          }
+        ],
+        "20:30": [
+          {
+            "name": "Charts",
+            "users": "426786",
+            "DoDCount": "173",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14481",
+            "DoDCount": "62",
+            "DoDPercent": "0.43%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177388",
+            "DoDCount": "73",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107851",
+            "DoDCount": "53",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38383",
+            "DoDCount": "18",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart",
+            "users": "355700",
+            "DoDCount": "62",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3387",
+            "DoDCount": "39",
+            "DoDPercent": "1.16%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13635",
+            "DoDCount": "8",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10013",
+            "DoDCount": "30",
+            "DoDPercent": "0.30%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8900",
+            "DoDCount": "11",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8052",
+            "DoDCount": "12",
+            "DoDPercent": "0.15%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2803",
+            "DoDCount": "2",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54569",
+            "DoDCount": "13",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61340",
+            "DoDCount": "40",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28936",
+            "DoDCount": "38",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22364",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18155",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12706",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2466",
+            "DoDCount": "79",
+            "DoDPercent": "3.31%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195987",
+            "DoDCount": "100",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39897",
+            "DoDCount": "30",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73535",
+            "DoDCount": "64",
+            "DoDPercent": "0.09%"
+          }
+        ],
+        "21:13": [
+          {
+            "name": "Charts",
+            "users": "426792",
+            "DoDCount": "179",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177389",
+            "DoDCount": "74",
+            "DoDPercent": "0.04%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14486",
+            "DoDCount": "67",
+            "DoDPercent": "0.46%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107853",
+            "DoDCount": "55",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38383",
+            "DoDCount": "18",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart",
+            "users": "355701",
+            "DoDCount": "63",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3389",
+            "DoDCount": "41",
+            "DoDPercent": "1.22%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13636",
+            "DoDCount": "9",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10015",
+            "DoDCount": "32",
+            "DoDPercent": "0.32%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8900",
+            "DoDCount": "11",
+            "DoDPercent": "0.12%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8054",
+            "DoDCount": "14",
+            "DoDPercent": "0.17%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2803",
+            "DoDCount": "2",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61342",
+            "DoDCount": "42",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54570",
+            "DoDCount": "14",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28937",
+            "DoDCount": "39",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22366",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18155",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12707",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2469",
+            "DoDCount": "82",
+            "DoDPercent": "3.44%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "195992",
+            "DoDCount": "105",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39898",
+            "DoDCount": "31",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73539",
+            "DoDCount": "68",
+            "DoDPercent": "0.09%"
+          }
+        ],
+        "22:32": [
+          {
+            "name": "Charts",
+            "users": "426808",
+            "DoDCount": "195",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177395",
+            "DoDCount": "80",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14494",
+            "DoDCount": "75",
+            "DoDPercent": "0.52%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107858",
+            "DoDCount": "60",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38384",
+            "DoDCount": "19",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart",
+            "users": "355710",
+            "DoDCount": "72",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3395",
+            "DoDCount": "47",
+            "DoDPercent": "1.40%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13637",
+            "DoDCount": "10",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10017",
+            "DoDCount": "34",
+            "DoDPercent": "0.34%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8901",
+            "DoDCount": "12",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8054",
+            "DoDCount": "14",
+            "DoDPercent": "0.17%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2803",
+            "DoDCount": "2",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61346",
+            "DoDCount": "46",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54574",
+            "DoDCount": "18",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28942",
+            "DoDCount": "44",
+            "DoDPercent": "0.15%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22366",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18158",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Fast Chart",
+            "users": "12708",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2479",
+            "DoDCount": "92",
+            "DoDPercent": "3.85%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "196002",
+            "DoDCount": "115",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39902",
+            "DoDCount": "35",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73544",
+            "DoDCount": "73",
+            "DoDPercent": "0.10%"
+          }
+        ],
+        "23:33": [
+          {
+            "name": "Charts",
+            "users": "426817",
+            "DoDCount": "204",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177400",
+            "DoDCount": "85",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14498",
+            "DoDCount": "79",
+            "DoDPercent": "0.55%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107863",
+            "DoDCount": "65",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38385",
+            "DoDCount": "20",
+            "DoDPercent": "0.05%"
+          },
+          {
+            "name": "Chart",
+            "users": "355715",
+            "DoDCount": "77",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3395",
+            "DoDCount": "47",
+            "DoDPercent": "1.40%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13637",
+            "DoDCount": "10",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9678",
+            "DoDCount": "6",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10018",
+            "DoDCount": "35",
+            "DoDPercent": "0.35%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8901",
+            "DoDCount": "12",
+            "DoDPercent": "0.13%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8054",
+            "DoDCount": "14",
+            "DoDPercent": "0.17%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4543",
+            "DoDCount": "4",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2803",
+            "DoDCount": "2",
+            "DoDPercent": "0.07%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54574",
+            "DoDCount": "18",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61348",
+            "DoDCount": "48",
+            "DoDPercent": "0.08%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28945",
+            "DoDCount": "47",
+            "DoDPercent": "0.16%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22366",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18159",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14396",
+            "DoDCount": "--",
+            "DoDPercent": "--"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2483",
+            "DoDCount": "96",
+            "DoDPercent": "4.02%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "196004",
+            "DoDCount": "117",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39903",
+            "DoDCount": "36",
+            "DoDPercent": "0.09%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73551",
+            "DoDCount": "80",
+            "DoDPercent": "0.11%"
+          }
+        ]
+      },
+      "14": {
+        "07:40": [
+          {
+            "name": "Charts",
+            "users": "426878",
+            "DoDCount": "61",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "NB Charts",
+            "users": "177429",
+            "DoDCount": "29",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Chart Master 3001 - Bar, Line, Area, Candlestick, Pie, Donut, Radar Charts",
+            "users": "14525",
+            "DoDCount": "27",
+            "DoDPercent": "0.19%"
+          },
+          {
+            "name": "Chartline",
+            "users": "107881",
+            "DoDCount": "18",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "ChartGen (Beta)",
+            "users": "38391",
+            "DoDCount": "6",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "i Chart - Generate any charts in 5 seconds - Bar, Line, Pie, Donut, Radar, Scatter, Radial",
+            "users": "3409",
+            "DoDCount": "14",
+            "DoDPercent": "0.41%"
+          },
+          {
+            "name": "Chart",
+            "users": "355734",
+            "DoDCount": "19",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Charts Modifier",
+            "users": "13640",
+            "DoDCount": "3",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Auto Layout Bar Charts",
+            "users": "9681",
+            "DoDCount": "3",
+            "DoDPercent": "0.03%"
+          },
+          {
+            "name": "Bar charts",
+            "users": "8902",
+            "DoDCount": "1",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Figma Charts",
+            "users": "10028",
+            "DoDCount": "10",
+            "DoDPercent": "0.10%"
+          },
+          {
+            "name": "Bar Charts",
+            "users": "8059",
+            "DoDCount": "5",
+            "DoDPercent": "0.06%"
+          },
+          {
+            "name": "Auto Layout Column Charts",
+            "users": "4544",
+            "DoDCount": "1",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Waterfal charts",
+            "users": "2803",
+            "DoDCount": "0",
+            "DoDPercent": "0.00%"
+          },
+          {
+            "name": "Chart Maker",
+            "users": "54579",
+            "DoDCount": "5",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Flow chart",
+            "users": "61360",
+            "DoDCount": "12",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "pie chart",
+            "users": "28952",
+            "DoDCount": "7",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Map Chart",
+            "users": "22366",
+            "DoDCount": "0",
+            "DoDPercent": "0.00%"
+          },
+          {
+            "name": "Line Chart",
+            "users": "18161",
+            "DoDCount": "2",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "Simple Chart",
+            "users": "14398",
+            "DoDCount": "2",
+            "DoDPercent": "0.01%"
+          },
+          {
+            "name": "i 3D extrude, 3d shape, isometric, oblique pro",
+            "users": "2510",
+            "DoDCount": "27",
+            "DoDPercent": "1.09%"
+          },
+          {
+            "name": "Fig3D",
+            "users": "196036",
+            "DoDCount": "32",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "3D Vector",
+            "users": "39912",
+            "DoDCount": "9",
+            "DoDPercent": "0.02%"
+          },
+          {
+            "name": "Shapes",
+            "users": "73574",
+            "DoDCount": "23",
+            "DoDPercent": "0.03%"
           }
         ]
       }
