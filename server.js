@@ -172,114 +172,145 @@ app.get('/fetch-plugin-data', async (req, res) => {
 
 async function fetchPluginData(previousData) {
     console.log('Starting to fetch plugin data from API');
-    try {
-        const searchQueries = [
-            'chart',
-            'animate',
-            'extrude'
-        ];
+    
+    const maxRetries = 10;
+    const retryDelay = 400;
+    
+    async function attemptFetch() {
+        try {
+            const searchQueries = [
+                'chart',
+                'animate',
+                'extrude'
+            ];
 
-        let allPlugins = [];
-        let totalPlugins = 0;
-        
-        for (const query of searchQueries) {
-            console.log(`\n=== Processing query: ${query} ===`);
-            const url = `https://www.figma.com/api/search/resources?query=${encodeURIComponent(query)}&price=all&creators=all&sort_by=relevancy&resource_type=plugin`;
+            let allPlugins = [];
+            let totalPlugins = 0;
             
-            try {
-                console.log(`Making API request to: ${url}`);
-                const response = await axios.get(url, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Accept': 'application/json',
-                        'Referer': 'https://www.figma.com/',
-                        'Origin': 'https://www.figma.com'
-                    },
-                    timeout: 10000
-                });
-
-                console.log('API Response status:', response.status);
+            for (const query of searchQueries) {
+                console.log(`\n=== Processing query: ${query} ===`);
+                const url = `https://www.figma.com/api/search/resources?query=${encodeURIComponent(query)}&price=all&creators=all&sort_by=relevancy&resource_type=plugin`;
                 
-                if (!response.data) {
-                    console.error('No data in response');
-                    continue;
-                }
+                try {
+                    console.log(`Making API request to: ${url}`);
+                    const response = await axios.get(url, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Accept': 'application/json',
+                            'Referer': 'https://www.figma.com/',
+                            'Origin': 'https://www.figma.com'
+                        },
+                        timeout: 10000
+                    });
 
-                // 检查响应数据结构
-                console.log('Response data structure:', Object.keys(response.data));
-                
-                // 检查是否有错误
-                if (response.data.error) {
-                    console.error('API Error:', response.data.error);
-                    console.error('API Status:', response.data.status);
-                    continue;
-                }
-
-                // 检查是否有结果
-                if (!response.data.meta || !response.data.meta.results) {
-                    console.error('No results in response. Full response:', JSON.stringify(response.data, null, 2));
-                    continue;
-                }
-
-                // 获取插件数据
-                const plugins = response.data.meta.results;
-                console.log(`\nFound ${plugins.length} plugins for query "${query}"`);
-                
-                // 处理每个插件，每个关键词最多取15个
-                let keywordCount = 0;
-                for (const plugin of plugins) {
-                    if (keywordCount >= 15) break;  // 每个关键词最多取15个
+                    console.log('API Response status:', response.status);
                     
-                    const pluginId = plugin.model.id;
-                    // 检查是否已经添加过这个插件
-                    if (allPlugins.some(p => p.id === pluginId)) {
-                        console.log(`Skipping duplicate plugin: ${plugin.model.name}`);
-                        continue;
+                    if (!response.data) {
+                        console.error('No data in response');
+                        throw new Error('No data in response');
                     }
 
-                    console.log(`Processing plugin: ${plugin.model.name} (ID: ${pluginId})`);
+                    // 检查响应数据结构
+                    console.log('Response data structure:', Object.keys(response.data));
                     
-                    const currentUsers = plugin.model.user_count || 0;
-                    const currentLikes = plugin.model.like_count || 0;
-                    const previousPlugin = previousData ? previousData.find(p => p.id === pluginId) : null;
-                    
-                    if (previousPlugin) {
-                        console.log(`Found previous data for plugin ${plugin.model.name}:`, {
-                            current_users: currentUsers,
-                            previous_users: previousPlugin.users,
-                            current_likes: currentLikes,
-                            previous_likes: previousPlugin.likes
-                        });
+                    // 检查是否有错误
+                    if (response.data.error) {
+                        console.error('API Error:', response.data.error);
+                        console.error('API Status:', response.data.status);
+                        throw new Error(`API Error: ${response.data.error}`);
                     }
 
-                    const processedPlugin = {
-                        id: pluginId,
-                        name: plugin.model.name,
-                        users: currentUsers,
-                        likes: currentLikes,
-                        DoDCount: previousPlugin ? currentUsers - previousPlugin.users : "--",
-                        DoDLikes: previousPlugin ? currentLikes - previousPlugin.likes : "--"
-                    };
+                    // 检查是否有结果
+                    if (!response.data.meta || !response.data.meta.results) {
+                        console.error('No results in response. Full response:', JSON.stringify(response.data, null, 2));
+                        throw new Error('No results in response');
+                    }
 
-                    allPlugins.push(processedPlugin);
-                    totalPlugins++;
-                    keywordCount++;
-                    console.log(`Added plugin ${plugin.model.name} to collection. Total plugins: ${totalPlugins}, Keyword count: ${keywordCount}`);
+                    // 获取插件数据
+                    const plugins = response.data.meta.results;
+                    console.log(`\nFound ${plugins.length} plugins for query "${query}"`);
+                    
+                    // 处理每个插件，每个关键词最多取15个
+                    let keywordCount = 0;
+                    for (const plugin of plugins) {
+                        if (keywordCount >= 15) break;  // 每个关键词最多取15个
+                        
+                        const pluginId = plugin.model.id;
+                        // 检查是否已经添加过这个插件
+                        if (allPlugins.some(p => p.id === pluginId)) {
+                            console.log(`Skipping duplicate plugin: ${plugin.model.name}`);
+                            continue;
+                        }
+
+                        console.log(`Processing plugin: ${plugin.model.name} (ID: ${pluginId})`);
+                        
+                        const currentUsers = plugin.model.user_count || 0;
+                        const currentLikes = plugin.model.like_count || 0;
+                        const previousPlugin = previousData ? previousData.find(p => p.id === pluginId) : null;
+                        
+                        if (previousPlugin) {
+                            console.log(`Found previous data for plugin ${plugin.model.name}:`, {
+                                current_users: currentUsers,
+                                previous_users: previousPlugin.users,
+                                current_likes: currentLikes,
+                                previous_likes: previousPlugin.likes
+                            });
+                        }
+
+                        const processedPlugin = {
+                            id: pluginId,
+                            name: plugin.model.name,
+                            users: currentUsers,
+                            likes: currentLikes,
+                            DoDCount: previousPlugin ? currentUsers - previousPlugin.users : "--",
+                            DoDLikes: previousPlugin ? currentLikes - previousPlugin.likes : "--"
+                        };
+
+                        allPlugins.push(processedPlugin);
+                        totalPlugins++;
+                        keywordCount++;
+                        console.log(`Added plugin ${plugin.model.name} to collection. Total plugins: ${totalPlugins}, Keyword count: ${keywordCount}`);
+                    }
+
+                } catch (error) {
+                    console.error(`Error processing query "${query}":`, error.message);
+                    throw error; // 重新抛出错误以触发重试
                 }
-
-            } catch (error) {
-                console.error(`Error processing query "${query}":`, error.message);
-                continue;
             }
+
+            // 验证是否成功获取到数据
+            if (allPlugins.length === 0) {
+                throw new Error('No plugins collected from any query');
+            }
+
+            console.log(`\nTotal plugins collected: ${allPlugins.length}`);
+            return allPlugins;
+
+        } catch (error) {
+            console.error('Error in fetchPluginData attempt:', error);
+            throw error;
         }
+    }
 
-        console.log(`\nTotal plugins collected: ${allPlugins.length}`);
-        return allPlugins;
-
-    } catch (error) {
-        console.error('Error in fetchPluginData:', error);
-        throw error;
+    // 重试逻辑
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Attempt ${attempt}/${maxRetries} to fetch plugin data`);
+            const result = await attemptFetch();
+            console.log(`Successfully fetched plugin data on attempt ${attempt}`);
+            return result;
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt === maxRetries) {
+                console.error(`All ${maxRetries} attempts failed. Giving up.`);
+                throw new Error(`Failed to fetch plugin data after ${maxRetries} attempts: ${error.message}`);
+            }
+            
+            console.log(`Waiting ${retryDelay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
     }
 }
 
