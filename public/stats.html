@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>埋点统计 - 每小时/每天</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 16px;
+            color: #222;
+        }
+
+        h2 {
+            margin: 0 0 8px 0;
+        }
+
+        .section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .muted {
+            color: #666;
+            font-size: 12px;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            background: #f8f9fb;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #eef2ff;
+        }
+
+        input[type="date"],
+        input[type="number"] {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #fafafa;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            background: #f1f5ff;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>埋点统计</h2>
+    <div class="muted">展示当日每小时次数与过去每日总次数，数据来自 /stats/hourly 与 /stats/daily。</div>
+
+    <div class="section" id="hourly-section">
+        <div class="row">
+            <strong>当日每小时次数</strong>
+            <span class="muted">(UTC 日界)</span>
+        </div>
+        <div class="row">
+            <label>选择日期(UTC)：</label>
+            <input id="dayInput" type="date">
+            <button id="loadHourlyBtn">加载</button>
+            <span class="badge" id="hourlyDayBadge"></span>
+        </div>
+        <div class="row">
+            <table id="hourlyTable">
+                <thead>
+                    <tr>
+                        <th>小时(0-23)</th>
+                        <th colspan="6">次数</th>
+                    </tr>
+                </thead>
+                <tbody id="hourlyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section" id="daily-section">
+        <div class="row">
+            <strong>过去每日总次数</strong>
+            <span class="muted">(UTC 按日聚合)</span>
+        </div>
+        <div class="row">
+            <label>天数：</label>
+            <input id="daysInput" type="number" value="30" min="1" max="365">
+            <button id="loadDailyBtn">加载</button>
+        </div>
+        <div class="row">
+            <table id="dailyTable">
+                <thead>
+                    <tr>
+                        <th>日期(YYYY-MM-DD)</th>
+                        <th>总次数</th>
+                    </tr>
+                </thead>
+                <tbody id="dailyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function toUTCDateString(d) {
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        async function loadHourly(dayStr) {
+            const badge = document.getElementById('hourlyDayBadge');
+            const tbody = document.getElementById('hourlyBody');
+            tbody.innerHTML = '';
+            badge.textContent = dayStr;
+
+            const res = await fetch(`/stats/hourly?day=${encodeURIComponent(dayStr)}`);
+            if (!res.ok) { tbody.innerHTML = `<tr><td colspan="7">加载失败(${res.status})</td></tr>`; return; }
+            const data = await res.json();
+            const hours = Array.isArray(data.hourly) ? data.hourly : Array(24).fill(0);
+
+            // 每行展示6小时，整齐一些
+            for (let row = 0; row < 4; row++) {
+                const tr = document.createElement('tr');
+                const startHour = row * 6;
+                const label = document.createElement('td');
+                label.textContent = `${startHour}-${startHour + 5}`;
+                label.style.fontWeight = '600';
+                tr.appendChild(label);
+
+                for (let h = startHour; h < startHour + 6; h++) {
+                    const td = document.createElement('td');
+                    td.textContent = hours[h] ?? 0;
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+            const hourlyLabels = Array.from({ length: 24 }, (_, h) => String(h));
+            drawBarChart(
+                document.getElementById('hourlyChart'),
+                hourlyLabels,
+                hours,
+                { barColor: '#2563eb', gapRatio: 0.25 }
+            );
+        }
+
+        async function loadDaily(days) {
+            const tbody = document.getElementById('dailyBody');
+            tbody.innerHTML = '';
+            const res = await fetch(`/stats/daily?days=${encodeURIComponent(days)}`);
+            if (!res.ok) { tbody.innerHTML = `<tr><td colspan="2">加载失败(${res.status})</td></tr>`; return; }
+            const data = await res.json();
+            const rows = (data.days || []);
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2">暂无数据</td></tr>`;
+                return;
+            }
+            for (const r of rows) {
+                const tr = document.createElement('tr');
+                const tdDay = document.createElement('td');
+                tdDay.textContent = r.day;
+                const tdCnt = document.createElement('td');
+                tdCnt.textContent = r.count ?? 0;
+                tr.appendChild(tdDay);
+                tr.appendChild(tdCnt);
+                tbody.appendChild(tr);
+            }
+            const labels = (rows || []).map(r => r.day);
+            const values = (rows || []).map(r => r.count || 0);
+            drawBarChart(
+                document.getElementById('dailyChart'),
+                labels,
+                values,
+                { barColor: '#10b981', gapRatio: 0.3 }
+            );
+        }
+
+        // 初始化：默认今天(UTC)与最近30天
+        (function init() {
+            const dayInput = document.getElementById('dayInput');
+            const loadHourlyBtn = document.getElementById('loadHourlyBtn');
+            const daysInput = document.getElementById('daysInput');
+            const loadDailyBtn = document.getElementById('loadDailyBtn');
+
+            const todayUTC = new Date(Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate()
+            ));
+            const todayStr = toUTCDateString(todayUTC);
+            dayInput.value = todayStr;
+
+            loadHourlyBtn.addEventListener('click', () => loadHourly(dayInput.value));
+            loadDailyBtn.addEventListener('click', () => loadDaily(parseInt(daysInput.value || '30', 10)));
+
+            // 首次加载
+            loadHourly(todayStr);
+            loadDaily(parseInt(daysInput.value || '30', 10));
+        })();
+
+        function drawBarChart(canvas, labels, values, opts = {}) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const cssW = canvas.clientWidth || canvas.width;
+            const cssH = canvas.clientHeight || canvas.height;
+            // 以 DPR 缩放，避免模糊
+            canvas.width = Math.floor(cssW * dpr);
+            canvas.height = Math.floor(cssH * dpr);
+            ctx.scale(dpr, dpr);
+
+            const width = cssW;
+            const height = cssH;
+
+            // 内边距
+            const pad = { top: 12, right: 12, bottom: 28, left: 36 };
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, width, height);
+
+            // 轴线
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, height - pad.bottom);
+            ctx.lineTo(width - pad.right, height - pad.bottom);
+            ctx.stroke();
+
+            const n = values.length;
+            const maxVal = Math.max(1, ...values);
+            const plotW = width - pad.left - pad.right;
+            const plotH = height - pad.top - pad.bottom;
+            const gapRatio = Math.min(0.5, opts.gapRatio ?? 0.2); // 柱间距占单元宽度比例
+            const unitW = plotW / n;
+            const gap = unitW * gapRatio;
+            const barW = Math.max(2, unitW - gap);
+
+            // 网格线与 y 刻度（简单 4 档）
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '12px Arial';
+            for (let i = 0; i <= 4; i++) {
+                const val = Math.round((maxVal * i) / 4);
+                const y = height - pad.bottom - (plotH * i) / 4;
+                ctx.strokeStyle = '#f3f4f6';
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(width - pad.right, y);
+                ctx.stroke();
+                ctx.fillStyle = '#6b7280';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(val), pad.left - 6, y);
+            }
+
+            // 柱子
+            for (let i = 0; i < n; i++) {
+                const v = values[i] || 0;
+                const h = (v / maxVal) * plotH;
+                const x = pad.left + unitW * i + (unitW - barW) / 2;
+                const y = height - pad.bottom - h;
+
+                ctx.fillStyle = opts.barColor || '#3b82f6'; // 蓝色
+                ctx.fillRect(x, y, barW, h);
+            }
+
+            // x 轴标签（尽量稀疏显示）
+            ctx.fillStyle = '#374151';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const step = Math.ceil(n / 12); // 最多显示约 12 个标签
+            for (let i = 0; i < n; i += step) {
+                const xCenter = pad.left + unitW * i + unitW / 2;
+                const label = labels[i] ?? '';
+                ctx.fillText(String(label), xCenter, height - pad.bottom + 6);
+            }
+        }
+    </script>
+</body>
+
+</html>

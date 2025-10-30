@@ -431,3 +431,74 @@ app.delete('/delete-time-data', (req, res) => {
         });
     }
 });
+
+app.post('/track', (req, res) => {
+    try {
+      // 简易鉴权（如不需要可移除）
+      // if (req.headers['x-ic-token'] !== TOKEN) return res.status(401).json({ ok: false });
+  
+      const { event_name, active_chart_type_id, client_ts } = req.body || {};
+      if (!event_name) return res.status(400).json({ ok: false, error: 'event_name required' });
+  
+      const now = new Date();
+      const ts = Number.isFinite(+client_ts) ? new Date(client_ts) : now; // 统一用UTC聚合
+  
+      // 如需原始事件落盘，可启用：
+      // const y = ts.getUTCFullYear().toString();
+      // const m = String(ts.getUTCMonth() + 1).padStart(2, '0');
+      // const d = String(ts.getUTCDate()).padStart(2, '0');
+      // const hh = String(ts.getUTCHours()).padStart(2, '0');
+      // const mm = String(ts.getUTCMinutes()).padStart(2, '0');
+      // const dd = path.join(EVENTS_BASE, y, m, d); ensureDir(dd);
+      // fs.writeFileSync(path.join(dd, `${hh}-${mm}-${Date.now()}.json`), JSON.stringify({ event_name, active_chart_type_id, client_ts: ts.toISOString(), server_ts: now.toISOString() }, null, 2));
+  
+      upsertCounters(event_name, active_chart_type_id, ts);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ ok: false });
+    }
+  });
+  
+  // 小时统计（读取预聚合）
+  app.get('/stats/hourly', (req, res) => {
+    try {
+      const day = req.query.day; // YYYY-MM-DD (UTC)
+      if (!day) return res.status(400).json({ error: 'day required' });
+      const dayPath = path.join(COUNTERS_BASE, `${day}.json`);
+      if (!fs.existsSync(dayPath)) {
+        return res.json({ day, hourly: Array(24).fill(0), byEvent: {}, byChartType: {} });
+      }
+      const ctr = JSON.parse(fs.readFileSync(dayPath, 'utf8'));
+      res.json({ day: ctr.day, hourly: ctr.hours, byEvent: ctr.byEvent, byChartType: ctr.byChartType });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: 'fail' });
+    }
+  });
+  
+  // 日统计（读取预聚合）
+  app.get('/stats/daily', (req, res) => {
+    try {
+      const days = Math.max(1, Math.min(365, parseInt(req.query.days || '30', 10)));
+      const out = [];
+      const now = new Date();
+      const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  
+      for (let i = 0; i < days; i++) {
+        const d = new Date(todayUTC);
+        d.setUTCDate(todayUTC.getUTCDate() - i);
+        const dayStr = d.toISOString().slice(0, 10);
+        const dayPath = path.join(COUNTERS_BASE, `${dayStr}.json`);
+        let total = 0;
+        if (fs.existsSync(dayPath)) {
+          try { total = JSON.parse(fs.readFileSync(dayPath, 'utf8')).total || 0; } catch {}
+        }
+        out.push({ day: dayStr, count: total });
+      }
+      res.json({ days: out.reverse() });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: 'fail' });
+    }
+  });
