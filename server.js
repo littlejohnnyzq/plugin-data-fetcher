@@ -435,7 +435,8 @@ app.delete('/delete-time-data', (req, res) => {
 app.post('/track', (req, res) => {
     try {
       // 简易鉴权（如不需要可移除）
-      // if (req.headers['x-ic-token'] !== TOKEN) return res.status(401).json({ ok: false });
+      const TOKEN = 'iCharts';
+      if (req.headers['x-ic-token'] !== TOKEN) return res.status(401).json({ ok: false });
   
       const { event_name, active_chart_type_id, client_ts } = req.body || {};
       if (!event_name) return res.status(400).json({ ok: false, error: 'event_name required' });
