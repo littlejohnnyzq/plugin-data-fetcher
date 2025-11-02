@@ -12,6 +12,8 @@ app.use((req, res, next) => {
     next();
 });
 
+// 解析 JSON 请求体
+app.use(express.json());
 app.use(express.static('public'));
 
 // 添加调试日志中间件
@@ -501,5 +503,76 @@ app.post('/track', (req, res) => {
     } catch (e) {
       console.error(e);
       res.status(500).json({ error: 'fail' });
+    }
+  });
+
+  // GA4 转发接口（用于国内用户）
+  // 接收来自 Figma 插件的 GA4 事件数据，转发到 Google Analytics
+  app.post('/ga-proxy', async (req, res) => {
+    try {
+      // CORS 已经在全局中间件中处理
+      
+      // 预检请求
+      if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+      }
+
+      // 获取 GA4 配置（可以从环境变量或配置文件读取）
+      const MEASUREMENT_ID = process.env.MEASUREMENT_ID || 'G-N573FESCGF';
+      const API_SECRET = process.env.API_SECRET || 'FIAv3qMJRgeXKzWBsJRceA';
+
+      // 接收客户端发送的 GA4 请求体
+      const requestBody = req.body;
+      
+      // 构建转发到 Google Analytics 的 URL
+      const gaUrl = `https://www.google-analytics.com/mp/collect?measurement_id=${encodeURIComponent(MEASUREMENT_ID)}&api_secret=${encodeURIComponent(API_SECRET)}`;
+      
+      // 转发请求到 Google Analytics
+      try {
+        const response = await axios.post(gaUrl, requestBody, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000 // 10秒超时
+        });
+        
+        // GA 通常返回 204 No Content
+        return res.status(response.status || 204).json({ ok: true, forwarded: true });
+      } catch (gaError) {
+        // 如果无法访问 Google Analytics，记录错误但仍返回成功（避免客户端重试）
+        console.error('Failed to forward to GA4:', gaError.message);
+        return res.status(202).json({ 
+          ok: true, 
+          forwarded: false, 
+          error: 'GA4 unreachable from server',
+          note: 'Event received but not forwarded to GA4'
+        });
+      }
+    } catch (e) {
+      console.error('GA4 proxy error:', e);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // 测试接口：验证服务器是否能访问 Google Analytics
+  app.get('/test-ga-access', async (req, res) => {
+    try {
+      const gaUrl = 'https://www.google-analytics.com/mp/collect';
+      const response = await axios.get(gaUrl, {
+        timeout: 5000,
+        validateStatus: () => true // 接受任何状态码
+      });
+      
+      return res.json({ 
+        accessible: true, 
+        status: response.status,
+        message: 'Server can access Google Analytics'
+      });
+    } catch (e) {
+      return res.json({ 
+        accessible: false, 
+        error: e.message,
+        message: 'Server cannot access Google Analytics (may need proxy/VPN)'
+      });
     }
   });
