@@ -8,7 +8,14 @@ const port = 1086;
 // 添加 CORS 支持
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, X-IC-Token');
+    res.header('Access-Control-Max-Age', '86400');
+    
+    // 处理预检请求
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+    }
     next();
 });
 
@@ -508,15 +515,15 @@ app.post('/track', (req, res) => {
 
   // GA4 转发接口（用于国内用户）
   // 接收来自 Figma 插件的 GA4 事件数据，转发到 Google Analytics
+  // 处理 OPTIONS 预检请求
+  app.options('/ga-proxy', (req, res) => {
+    res.status(204).end();
+  });
+
   app.post('/ga-proxy', async (req, res) => {
     try {
       // CORS 已经在全局中间件中处理
       
-      // 预检请求
-      if (req.method === 'OPTIONS') {
-        return res.status(204).end();
-      }
-
       // 获取 GA4 配置（可以从环境变量或配置文件读取）
       const MEASUREMENT_ID = process.env.MEASUREMENT_ID || 'G-N573FESCGF';
       const API_SECRET = process.env.API_SECRET || 'FIAv3qMJRgeXKzWBsJRceA';
