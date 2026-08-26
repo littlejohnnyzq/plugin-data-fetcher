@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { scheduleAlignedTask } = require('./aligned-scheduler');
 const {
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
@@ -142,15 +143,9 @@ app.listen(1086, '0.0.0.0', () => {
 });
 
 function startFetchTask() {
-    const now = new Date();
-    const millisTillNextHalfHour = 1800000 - (now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds()) % 1800000;
-
-    setTimeout(async () => {
-        await fetchData(); // 在接下来的半小时点执行
-        setInterval(async () => {
-            await fetchData(); // 每半小时执行一次
-        }, 1800000);
-    }, millisTillNextHalfHour);
+    scheduleAlignedTask(fetchData, {
+        onError: error => console.error('Error during scheduled fetch:', error)
+    });
 }
 
 startFetchTask();
