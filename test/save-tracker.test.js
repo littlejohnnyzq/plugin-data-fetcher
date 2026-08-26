@@ -127,6 +127,7 @@ test('fixed realtime plugins use the Figma fetcher while other plugins use daily
         [],
         {
             realtimeDelayMs: 0,
+            realtimeRotationOffset: 0,
             fetchRealtimeSaveCount: async contentId => {
                 calls.push(`figma:${contentId}`);
                 return 10;
@@ -141,6 +142,36 @@ test('fixed realtime plugins use the Figma fetcher while other plugins use daily
     assert.deepEqual(calls.sort(), ['fig-stats:200', 'figma:731451122947612104']);
     assert.equal(plugins[0].saveSource, 'figma-live');
     assert.equal(plugins[1].saveSource, 'fig-stats-daily');
+});
+
+test('realtime collection cools down and retries once after a Figma WAF challenge', async () => {
+    const plugin = { id: 'realtime', contentId: '731451122947612104', name: 'Realtime' };
+    let attempts = 0;
+
+    await collectSaveCounts(
+        [plugin],
+        { plugins: [{ id: plugin.id }] },
+        [],
+        {
+            realtimeDelayMs: 0,
+            wafCooldownMs: 0,
+            realtimeRotationOffset: 0,
+            fetchRealtimeSaveCount: async () => {
+                attempts++;
+                if (attempts === 1) {
+                    const error = new Error('Figma WAF challenge');
+                    error.code = 'FIGMA_WAF_CHALLENGE';
+                    throw error;
+                }
+                return 42;
+            }
+        }
+    );
+
+    assert.equal(attempts, 2);
+    assert.equal(plugin.saves, 42);
+    assert.equal(plugin.saveStatus, 'ok');
+    assert.equal(plugin.saveError, null);
 });
 
 test('mapWithConcurrency respects its concurrency limit', async () => {

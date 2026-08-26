@@ -4,7 +4,8 @@ const axios = require('axios');
 
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_RETRIES = 3;
-const DEFAULT_REALTIME_DELAY_MS = 1800;
+const DEFAULT_REALTIME_DELAY_MS = 8000;
+const DEFAULT_WAF_COOLDOWN_MS = 60000;
 const WATCH_RATIO = 0.5;
 const HIGH_USER_THRESHOLD = 50000;
 const ALWAYS_WATCHED_CONTENT_IDS = new Set([
@@ -256,6 +257,7 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
         plugin.DoDSaves = '--';
         plugin.saveSource = null;
         plugin.saveStatus = plugin.isSaveTracked ? 'pending' : 'not-tracked';
+        plugin.saveError = null;
     }
 
     async function collectPlugin(plugin, fetcher, source) {
@@ -272,12 +274,16 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
             plugin.DoDSaves = previousSaves === null ? '--' : saves - previousSaves;
             plugin.saveSource = source;
             plugin.saveStatus = 'ok';
+            plugin.saveError = null;
             plugin.saveCollectedAt = new Date().toISOString();
             console.log(`Collected Saves for ${plugin.name} from ${source}: ${saves}`);
+            return null;
         } catch (error) {
             plugin.saveSource = source;
             plugin.saveStatus = 'failed';
+            plugin.saveError = error.message;
             console.error(`Failed to collect Saves for ${plugin.name} from ${source}:`, error.message);
+            return error;
         }
     }
 
@@ -289,9 +295,25 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
     );
 
     const realtimeFetcher = options.fetchRealtimeSaveCount ?? options.fetchSaveCount ?? fetchSaveCountFromFigma;
-    for (let index = 0; index < realtimePlugins.length; index++) {
-        await collectPlugin(realtimePlugins[index], realtimeFetcher, 'figma-live');
-        if (index < realtimePlugins.length - 1) {
+    const rotationOffset = realtimePlugins.length === 0
+        ? 0
+        : (options.realtimeRotationOffset ?? Math.floor(Date.now() / 1800000)) % realtimePlugins.length;
+    const orderedRealtimePlugins = [
+        ...realtimePlugins.slice(rotationOffset),
+        ...realtimePlugins.slice(0, rotationOffset)
+    ];
+
+    for (let index = 0; index < orderedRealtimePlugins.length; index++) {
+        const plugin = orderedRealtimePlugins[index];
+        let error = await collectPlugin(plugin, realtimeFetcher, 'figma-live');
+        if (error?.code === 'FIGMA_WAF_CHALLENGE') {
+            const cooldownMs = options.wafCooldownMs ?? DEFAULT_WAF_COOLDOWN_MS;
+            console.warn(`Figma WAF challenge detected; cooling down for ${cooldownMs}ms before retrying ${plugin.name}`);
+            await new Promise(resolve => setTimeout(resolve, cooldownMs));
+            error = await collectPlugin(plugin, realtimeFetcher, 'figma-live');
+        }
+
+        if (index < orderedRealtimePlugins.length - 1) {
             const delayMs = options.realtimeDelayMs ?? DEFAULT_REALTIME_DELAY_MS;
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
