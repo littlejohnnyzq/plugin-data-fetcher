@@ -114,6 +114,35 @@ test('collectSaveCounts only requests watched plugins and calculates daily growt
     );
 });
 
+test('fixed realtime plugins use the Figma fetcher while other plugins use daily stats', async () => {
+    const plugins = [
+        { id: 'realtime', contentId: '731451122947612104', name: 'Realtime' },
+        { id: 'daily', contentId: '200', name: 'Daily' }
+    ];
+    const calls = [];
+
+    await collectSaveCounts(
+        plugins,
+        { plugins: plugins.map(plugin => ({ id: plugin.id })) },
+        [],
+        {
+            realtimeDelayMs: 0,
+            fetchRealtimeSaveCount: async contentId => {
+                calls.push(`figma:${contentId}`);
+                return 10;
+            },
+            fetchDailySaveCount: async contentId => {
+                calls.push(`fig-stats:${contentId}`);
+                return 20;
+            }
+        }
+    );
+
+    assert.deepEqual(calls.sort(), ['fig-stats:200', 'figma:731451122947612104']);
+    assert.equal(plugins[0].saveSource, 'figma-live');
+    assert.equal(plugins[1].saveSource, 'fig-stats-daily');
+});
+
 test('mapWithConcurrency respects its concurrency limit', async () => {
     let activeWorkers = 0;
     let maximumWorkers = 0;

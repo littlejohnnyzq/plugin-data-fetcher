@@ -15,6 +15,26 @@ const FIXED_PLUGINS = [
     {
         contentId: '1473659572195493091',
         searchQuery: 'i Print CMYK'
+    },
+    {
+        contentId: '731451122947612104',
+        searchQuery: 'Charts'
+    },
+    {
+        contentId: '1404821057322599271',
+        searchQuery: 'UCharts'
+    },
+    {
+        contentId: '1249759048471403961',
+        searchQuery: 'Fast Isometric'
+    },
+    {
+        contentId: '988173868842375596',
+        searchQuery: 'Aninix'
+    },
+    {
+        contentId: '961270034818256057',
+        searchQuery: 'Jitter Animation'
     }
 ];
 
