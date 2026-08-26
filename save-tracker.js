@@ -1,0 +1,286 @@
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+
+const DEFAULT_CONCURRENCY = 4;
+const DEFAULT_RETRIES = 3;
+const WATCH_RATIO = 0.5;
+const HIGH_USER_THRESHOLD = 50000;
+const ALWAYS_WATCHED_CONTENT_IDS = new Set([
+    '1370606842652257742',
+    '1387823712562916211',
+    '1414925802794094447',
+    '1473659572195493091'
+]);
+const WATCHLIST_PATH = path.join(__dirname, 'state', 'save-watchlist.json');
+
+function toFiniteNumber(value) {
+    if (value === null || value === undefined || value === '' || value === '--') return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+function buildWatchlist(plugins, sourceDate) {
+    const rankedPlugins = [...plugins].sort((a, b) => {
+        const growthDifference = (toFiniteNumber(b.DoDCount) ?? 0) - (toFiniteNumber(a.DoDCount) ?? 0);
+        if (growthDifference !== 0) return growthDifference;
+
+        const usersDifference = (toFiniteNumber(b.users) ?? 0) - (toFiniteNumber(a.users) ?? 0);
+        if (usersDifference !== 0) return usersDifference;
+
+        return String(a.id).localeCompare(String(b.id));
+    });
+    const topGrowthCount = Math.ceil(rankedPlugins.length * WATCH_RATIO);
+    const topGrowthIds = new Set(rankedPlugins.slice(0, topGrowthCount).map(plugin => plugin.id));
+    const watchedPlugins = rankedPlugins.filter(plugin => (
+        topGrowthIds.has(plugin.id)
+        || (toFiniteNumber(plugin.users) ?? 0) > HIGH_USER_THRESHOLD
+        || ALWAYS_WATCHED_CONTENT_IDS.has(String(plugin.contentId))
+    ));
+
+    return {
+        updatedAt: new Date().toISOString(),
+        sourceDate,
+        ratio: WATCH_RATIO,
+        totalPlugins: rankedPlugins.length,
+        topGrowthCount,
+        watchedCount: watchedPlugins.length,
+        plugins: watchedPlugins.map(plugin => ({
+            id: plugin.id,
+            contentId: plugin.contentId,
+            name: plugin.name,
+            previousDayNewUsers: toFiniteNumber(plugin.DoDCount) ?? 0,
+            watchReasons: [
+                topGrowthIds.has(plugin.id) ? 'top-growth-50-percent' : null,
+                (toFiniteNumber(plugin.users) ?? 0) > HIGH_USER_THRESHOLD ? 'users-over-50000' : null,
+                ALWAYS_WATCHED_CONTENT_IDS.has(String(plugin.contentId)) ? 'fixed-plugin' : null
+            ].filter(Boolean)
+        }))
+    };
+}
+
+function addMandatoryPluginsToWatchlist(watchlist, plugins) {
+    const watchedById = new Map(watchlist.plugins.map(plugin => [plugin.id, plugin]));
+    let changed = false;
+
+    for (const plugin of plugins) {
+        const reasons = [
+            (toFiniteNumber(plugin.users) ?? 0) > HIGH_USER_THRESHOLD ? 'users-over-50000' : null,
+            ALWAYS_WATCHED_CONTENT_IDS.has(String(plugin.contentId)) ? 'fixed-plugin' : null
+        ].filter(Boolean);
+        if (reasons.length === 0) continue;
+
+        const watchedPlugin = watchedById.get(plugin.id);
+        if (!watchedPlugin) {
+            const newWatchedPlugin = {
+                id: plugin.id,
+                contentId: plugin.contentId,
+                name: plugin.name,
+                previousDayNewUsers: toFiniteNumber(plugin.DoDCount) ?? 0,
+                watchReasons: reasons
+            };
+            watchlist.plugins.push(newWatchedPlugin);
+            watchedById.set(plugin.id, newWatchedPlugin);
+            changed = true;
+            continue;
+        }
+
+        const existingReasons = new Set(watchedPlugin.watchReasons ?? []);
+        for (const reason of reasons) {
+            if (!existingReasons.has(reason)) {
+                existingReasons.add(reason);
+                changed = true;
+            }
+        }
+        watchedPlugin.watchReasons = [...existingReasons];
+    }
+
+    watchlist.totalPlugins = plugins.length;
+    watchlist.watchedCount = watchlist.plugins.length;
+    return changed;
+}
+
+function loadWatchlist() {
+    if (!fs.existsSync(WATCHLIST_PATH)) return null;
+
+    try {
+        const watchlist = JSON.parse(fs.readFileSync(WATCHLIST_PATH, 'utf8'));
+        return Array.isArray(watchlist.plugins) ? watchlist : null;
+    } catch (error) {
+        console.error('Failed to load Save watchlist:', error.message);
+        return null;
+    }
+}
+
+function storeWatchlist(watchlist) {
+    const stateDirectory = path.dirname(WATCHLIST_PATH);
+    fs.mkdirSync(stateDirectory, { recursive: true });
+
+    const temporaryPath = `${WATCHLIST_PATH}.tmp`;
+    fs.writeFileSync(temporaryPath, JSON.stringify(watchlist, null, 2));
+    fs.renameSync(temporaryPath, WATCHLIST_PATH);
+    console.log(`Save watchlist updated: ${watchlist.watchedCount}/${watchlist.totalPlugins} plugins (${watchlist.sourceDate})`);
+}
+
+function extractSaveCount(html) {
+    const scriptPattern = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let match;
+
+    while ((match = scriptPattern.exec(html)) !== null) {
+        try {
+            const jsonLd = JSON.parse(match[1]);
+            const documents = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+
+            for (const document of documents) {
+                const graph = Array.isArray(document?.['@graph']) ? document['@graph'] : [];
+                const nodes = [document, ...graph];
+                const statistics = nodes.flatMap(node => {
+                    if (Array.isArray(node?.interactionStatistic)) return node.interactionStatistic;
+                    return node?.interactionStatistic ? [node.interactionStatistic] : [];
+                });
+                const saveStatistic = statistics.find(statistic => {
+                    const interactionType = statistic?.interactionType;
+                    if (typeof interactionType === 'string') return interactionType.endsWith('/UseAction');
+                    return interactionType?.['@type'] === 'UseAction';
+                });
+                const saveCount = toFiniteNumber(saveStatistic?.userInteractionCount);
+                if (saveCount !== null) return saveCount;
+            }
+        } catch (error) {
+            console.warn('Ignoring invalid JSON-LD while reading Save count:', error.message);
+        }
+    }
+
+    return null;
+}
+
+async function fetchSaveCountFromFigma(contentId, options = {}) {
+    const retries = options.retries ?? DEFAULT_RETRIES;
+    const request = options.request ?? axios.get;
+    const url = `https://www.figma.com/community/plugin/${encodeURIComponent(contentId)}`;
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await request(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Referer': 'https://www.figma.com/community'
+                },
+                responseType: 'text',
+                timeout: 10000
+            });
+            if (response.status === 202 || response.headers?.['x-amzn-waf-action'] === 'challenge') {
+                throw new Error('Figma WAF challenge');
+            }
+            const saveCount = extractSaveCount(response.data);
+            if (saveCount === null) throw new Error('UseAction count not found in JSON-LD');
+            return saveCount;
+        } catch (error) {
+            if (attempt === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 500 * (2 ** (attempt - 1))));
+        }
+    }
+
+    return null;
+}
+
+async function fetchSaveCountFromFigStats(contentId, options = {}) {
+    const request = options.request ?? axios.get;
+    const url = `https://api.fig-stats.com/plugins/${encodeURIComponent(contentId)}`;
+    const response = await request(url, {
+        headers: { 'Accept': 'application/json' },
+        timeout: 10000
+    });
+    const saveCount = toFiniteNumber(response.data?.installs);
+    if (saveCount === null) throw new Error('Fig Stats installs count not found');
+    return saveCount;
+}
+
+async function fetchSaveCount(contentId, options = {}) {
+    const preferredSource = options.source ?? process.env.SAVE_COUNT_SOURCE ?? 'fig-stats';
+
+    if (preferredSource === 'figma') {
+        try {
+            return await fetchSaveCountFromFigma(contentId, options.figma);
+        } catch (error) {
+            console.warn(`Figma Save request failed for ${contentId}; falling back to Fig Stats: ${error.message}`);
+            return fetchSaveCountFromFigStats(contentId, options.figStats);
+        }
+    }
+
+    try {
+        return await fetchSaveCountFromFigStats(contentId, options.figStats);
+    } catch (error) {
+        console.warn(`Fig Stats Save request failed for ${contentId}; falling back to Figma: ${error.message}`);
+        return fetchSaveCountFromFigma(contentId, options.figma);
+    }
+}
+
+async function mapWithConcurrency(items, concurrency, worker) {
+    const results = new Array(items.length);
+    let nextIndex = 0;
+
+    async function runWorker() {
+        while (nextIndex < items.length) {
+            const currentIndex = nextIndex++;
+            results[currentIndex] = await worker(items[currentIndex], currentIndex);
+        }
+    }
+
+    const workerCount = Math.min(Math.max(1, concurrency), items.length);
+    await Promise.all(Array.from({ length: workerCount }, runWorker));
+    return results;
+}
+
+async function collectSaveCounts(plugins, watchlist, previousData, options = {}) {
+    const watchedIds = new Set((watchlist?.plugins ?? []).map(plugin => plugin.id));
+    const previousById = new Map((previousData ?? []).map(plugin => [plugin.id, plugin]));
+    const watchedPlugins = plugins.filter(plugin => watchedIds.has(plugin.id));
+
+    for (const plugin of plugins) {
+        plugin.isSaveTracked = watchedIds.has(plugin.id);
+        plugin.saves = null;
+        plugin.DoDSaves = '--';
+    }
+
+    await mapWithConcurrency(
+        watchedPlugins,
+        options.concurrency ?? DEFAULT_CONCURRENCY,
+        async plugin => {
+            if (!plugin.contentId) {
+                console.warn(`Cannot collect Save count without contentId: ${plugin.name}`);
+                return;
+            }
+
+            try {
+                const saves = await (options.fetchSaveCount ?? fetchSaveCount)(plugin.contentId);
+                const previousSaves = toFiniteNumber(previousById.get(plugin.id)?.saves);
+                plugin.saves = saves;
+                plugin.DoDSaves = previousSaves === null ? '--' : saves - previousSaves;
+                console.log(`Collected Saves for ${plugin.name}: ${saves}`);
+            } catch (error) {
+                console.error(`Failed to collect Saves for ${plugin.name}:`, error.message);
+            }
+        }
+    );
+
+    return plugins;
+}
+
+module.exports = {
+    ALWAYS_WATCHED_CONTENT_IDS,
+    HIGH_USER_THRESHOLD,
+    WATCHLIST_PATH,
+    addMandatoryPluginsToWatchlist,
+    buildWatchlist,
+    collectSaveCounts,
+    extractSaveCount,
+    fetchSaveCount,
+    fetchSaveCountFromFigma,
+    fetchSaveCountFromFigStats,
+    loadWatchlist,
+    mapWithConcurrency,
+    storeWatchlist
+};

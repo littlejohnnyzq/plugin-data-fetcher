@@ -1,10 +1,11 @@
 {
   "name": "hicharts",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "Figma Community plugin statistics collector",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "node server.js",
+    "test": "node --test"
   },
   "author": "",
   "license": "ISC",

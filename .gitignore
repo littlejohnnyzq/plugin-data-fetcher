@@ -4,6 +4,7 @@
 node_modules
 
 data/
+state/
 out/
 dist/
 code.js

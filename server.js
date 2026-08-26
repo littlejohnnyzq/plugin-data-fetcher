@@ -2,8 +2,21 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const {
+    addMandatoryPluginsToWatchlist,
+    buildWatchlist,
+    collectSaveCounts,
+    loadWatchlist,
+    storeWatchlist
+} = require('./save-tracker');
 const app = express();
 const port = 1086;
+const FIXED_PLUGINS = [
+    {
+        contentId: '1473659572195493091',
+        searchQuery: 'i Print CMYK'
+    }
+];
 
 // 添加 CORS 支持
 app.use((req, res, next) => {
@@ -28,14 +41,6 @@ app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
-
-const dataFilePath = path.join(__dirname, 'structured_data.json');
-
-const puppeteerConfig = {
-    headless: true,
-    executablePath: '/usr/bin/google-chrome',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
-};
 
 // 存储数据
 function storeData(data, currentTime) {
@@ -79,7 +84,7 @@ function storeDataAsEndOfDay(pluginData, previousDayTime) {
 }
 
 function findPreviousData(currentTime) {
-    previousDay = new Date(currentTime.getTime() - 86400000); // 减去一天的毫秒数
+    const previousDay = new Date(currentTime.getTime() - 86400000); // 减去一天的毫秒数
 
     const year = previousDay.getFullYear().toString();
     const month = (previousDay.getMonth() + 1).toString().padStart(2, '0');
@@ -110,10 +115,10 @@ function findPreviousData(currentTime) {
 app.listen(1086, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${port}`);
     console.log('Available endpoints:');
-    console.log('- GET /test');
     console.log('- GET /fetch-plugin-data');
     console.log('- GET /get-data');
     console.log('- GET /get-directory');
+    console.log('- GET /get-save-watchlist');
 });
 
 function startFetchTask() {
@@ -138,7 +143,11 @@ async function fetchData() {
         if (isMidnight) {
             const previousDayTime = new Date(now.getTime() - 86400000); // 减去一天的毫秒数
             const previousData = findPreviousData(previousDayTime); // 改为传递当前时间
-            const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+            const sourceDate = formatLocalDate(previousDayTime);
+            const pluginData = await fetchPluginData(previousData, {
+                refreshWatchlist: true,
+                watchlistSourceDate: sourceDate
+            }); // 获取当前插件数据，并按上一完整日增长更新关注清单
             storeData(pluginData, now); // 将当前时间传递给storeData
             storeDataAsEndOfDay(pluginData, previousDayTime); // 特殊处理：同时存储数据作为上一天的最后数据点
 
@@ -179,7 +188,14 @@ app.get('/fetch-plugin-data', async (req, res) => {
     }
 });
 
-async function fetchPluginData(previousData) {
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+async function fetchPluginData(previousData, options = {}) {
     console.log('Starting to fetch plugin data from API');
     
     const maxRetries = 10;
@@ -188,15 +204,48 @@ async function fetchPluginData(previousData) {
     async function attemptFetch() {
         try {
             const searchQueries = [
-                'chart',
-                'animate',
-                'extrude'
+                { query: 'chart', limit: 15 },
+                { query: 'animate', limit: 15 },
+                { query: 'extrude', limit: 15 },
+                { query: 'print', limit: 10 }
             ];
 
             let allPlugins = [];
             let totalPlugins = 0;
+
+            function addPlugin(model) {
+                const pluginId = model.id;
+                if (allPlugins.some(plugin => plugin.id === pluginId)) return false;
+
+                console.log(`Processing plugin: ${model.name} (ID: ${pluginId})`);
+
+                const currentUsers = model.user_count || 0;
+                const currentLikes = model.like_count || 0;
+                const previousPlugin = previousData ? previousData.find(plugin => plugin.id === pluginId) : null;
+
+                if (previousPlugin) {
+                    console.log(`Found previous data for plugin ${model.name}:`, {
+                        current_users: currentUsers,
+                        previous_users: previousPlugin.users,
+                        current_likes: currentLikes,
+                        previous_likes: previousPlugin.likes
+                    });
+                }
+
+                allPlugins.push({
+                    id: pluginId,
+                    contentId: model.content_id,
+                    name: model.name,
+                    users: currentUsers,
+                    likes: currentLikes,
+                    DoDCount: previousPlugin ? currentUsers - previousPlugin.users : '--',
+                    DoDLikes: previousPlugin ? currentLikes - previousPlugin.likes : '--'
+                });
+                totalPlugins++;
+                return true;
+            }
             
-            for (const query of searchQueries) {
+            for (const { query, limit } of searchQueries) {
                 console.log(`\n=== Processing query: ${query} ===`);
                 const url = `https://www.figma.com/api/search/resources?query=${encodeURIComponent(query)}&price=all&creators=all&sort_by=relevancy&resource_type=plugin`;
                 
@@ -240,46 +289,21 @@ async function fetchPluginData(previousData) {
                     const plugins = response.data.meta.results;
                     console.log(`\nFound ${plugins.length} plugins for query "${query}"`);
                     
-                    // 处理每个插件，每个关键词最多取15个
+                    // 按关键词配置的数量处理插件
                     let keywordCount = 0;
                     for (const plugin of plugins) {
-                        if (keywordCount >= 15) break;  // 每个关键词最多取15个
+                        if (keywordCount >= limit) break;
                         
-                        const pluginId = plugin.model.id;
                         // 检查是否已经添加过这个插件
-                        if (allPlugins.some(p => p.id === pluginId)) {
+                        if (allPlugins.some(p => p.id === plugin.model.id)) {
                             console.log(`Skipping duplicate plugin: ${plugin.model.name}`);
                             continue;
                         }
 
-                        console.log(`Processing plugin: ${plugin.model.name} (ID: ${pluginId})`);
-                        
-                        const currentUsers = plugin.model.user_count || 0;
-                        const currentLikes = plugin.model.like_count || 0;
-                        const previousPlugin = previousData ? previousData.find(p => p.id === pluginId) : null;
-                        
-                        if (previousPlugin) {
-                            console.log(`Found previous data for plugin ${plugin.model.name}:`, {
-                                current_users: currentUsers,
-                                previous_users: previousPlugin.users,
-                                current_likes: currentLikes,
-                                previous_likes: previousPlugin.likes
-                            });
+                        if (addPlugin(plugin.model)) {
+                            keywordCount++;
+                            console.log(`Added plugin ${plugin.model.name} to collection. Total plugins: ${totalPlugins}, Keyword count: ${keywordCount}`);
                         }
-
-                        const processedPlugin = {
-                            id: pluginId,
-                            name: plugin.model.name,
-                            users: currentUsers,
-                            likes: currentLikes,
-                            DoDCount: previousPlugin ? currentUsers - previousPlugin.users : "--",
-                            DoDLikes: previousPlugin ? currentLikes - previousPlugin.likes : "--"
-                        };
-
-                        allPlugins.push(processedPlugin);
-                        totalPlugins++;
-                        keywordCount++;
-                        console.log(`Added plugin ${plugin.model.name} to collection. Total plugins: ${totalPlugins}, Keyword count: ${keywordCount}`);
                     }
 
                 } catch (error) {
@@ -288,12 +312,48 @@ async function fetchPluginData(previousData) {
                 }
             }
 
+            for (const fixedPlugin of FIXED_PLUGINS) {
+                if (allPlugins.some(plugin => plugin.contentId === fixedPlugin.contentId)) continue;
+
+                const url = `https://www.figma.com/api/search/resources?query=${encodeURIComponent(fixedPlugin.searchQuery)}&price=all&creators=all&sort_by=relevancy&resource_type=plugin`;
+                console.log(`Fetching fixed plugin ${fixedPlugin.contentId}`);
+                const response = await axios.get(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept': 'application/json',
+                        'Referer': 'https://www.figma.com/',
+                        'Origin': 'https://www.figma.com'
+                    },
+                    timeout: 10000
+                });
+                const fixedResult = response.data?.meta?.results?.find(
+                    result => String(result.model?.content_id) === fixedPlugin.contentId
+                );
+                if (!fixedResult) {
+                    throw new Error(`Fixed plugin ${fixedPlugin.contentId} was not found`);
+                }
+                addPlugin(fixedResult.model);
+                console.log(`Added fixed plugin ${fixedResult.model.name}. Total plugins: ${totalPlugins}`);
+            }
+
             // 验证是否成功获取到数据
             if (allPlugins.length === 0) {
                 throw new Error('No plugins collected from any query');
             }
 
             console.log(`\nTotal plugins collected: ${allPlugins.length}`);
+
+            let watchlist = loadWatchlist();
+            if (options.refreshWatchlist || !watchlist) {
+                const sourceDate = options.watchlistSourceDate || `bootstrap-${formatLocalDate(new Date())}`;
+                watchlist = buildWatchlist(allPlugins, sourceDate);
+                storeWatchlist(watchlist);
+            } else if (addMandatoryPluginsToWatchlist(watchlist, allPlugins)) {
+                storeWatchlist(watchlist);
+            }
+
+            await collectSaveCounts(allPlugins, watchlist, previousData, { concurrency: 4 });
             return allPlugins;
 
         } catch (error) {
@@ -366,6 +426,14 @@ app.get('/get-directory', (req, res) => {
         console.error('Failed to construct directory:', error);
         res.status(500).json({ error: 'Failed to get directory' });
     }
+});
+
+app.get('/get-save-watchlist', (req, res) => {
+    const watchlist = loadWatchlist();
+    if (!watchlist) {
+        return res.status(404).json({ error: 'Save watchlist has not been created yet' });
+    }
+    res.json(watchlist);
 });
 
 function deleteTimeData(year, month, day, time) {

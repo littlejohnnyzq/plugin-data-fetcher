@@ -126,8 +126,7 @@
 </head>
 
 <body>
-    <h2>插件用户数采集</h2>
-    <a href="/stats.html" target="_blank" style="position: absolute; top: 12px; right: 12px;">查看埋点统计</a>
+    <h2>插件数据采集</h2>
     <!-- <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>
         <input type="number" style="width: 48px;" id="interval" value="30" disabled>
@@ -159,6 +158,8 @@
                         <th style="white-space: nowrap;">日增</th>
                         <th>点赞</th>
                         <th style="white-space: nowrap;">日增</th>
+                        <th>保存</th>
+                        <th style="white-space: nowrap;">日增</th>
                     </tr>
                 </thead>
                 <tbody id="data-body">
@@ -170,6 +171,12 @@
 
     <script>
 
+        const HIGHLIGHTED_PLUGIN_IDS = new Set([
+            '1370606842652257742',
+            '1387823712562916211',
+            '1414925802794094447',
+            '1473659572195493091'
+        ]);
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
             fetchDirectory();  // 获取目录信息
@@ -403,8 +410,16 @@
                 }
                 row.appendChild(DoDLikesCell);
 
+                const savesCell = document.createElement('td');
+                savesCell.textContent = Number.isFinite(entry.saves) ? entry.saves : '—';
+                row.appendChild(savesCell);
+
+                const DoDSavesCell = document.createElement('td');
+                DoDSavesCell.textContent = entry.DoDSaves ?? '—';
+                row.appendChild(DoDSavesCell);
+
                 dataBody.appendChild(row);
-                if (entry.name.includes('i Charts') || entry.name.includes('inima') || entry.name.includes('i 3D')) {
+                if (HIGHLIGHTED_PLUGIN_IDS.has(String(entry.contentId))) {
                     row.style.backgroundColor = '#eee8ff';
                 }
 
