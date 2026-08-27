@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { mountAnalyticsRelay } = require('./analytics-relay');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
 const {
@@ -142,12 +143,16 @@ app.use((req, res, next) => {
 });
 
 // 解析 JSON 请求体
+app.use('/api/plugin-events', express.json({ limit: '16kb' }));
 app.use(express.json());
+const analyticsRelay = mountAnalyticsRelay(app);
 app.use(express.static('public'));
 
 // 添加调试日志中间件
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    if (req.path !== '/api/plugin-events') {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    }
     next();
 });
 
@@ -266,6 +271,8 @@ app.listen(1086, '0.0.0.0', () => {
     console.log('- GET /get-data');
     console.log('- GET /get-directory');
     console.log('- GET /get-save-watchlist');
+    console.log('- POST /api/plugin-events');
+    console.log('- GET /analytics-healthz');
 });
 
 function startFetchTask() {
@@ -280,6 +287,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
     process.once(signal, async () => {
         console.log(`${signal} received; closing Save browser`);
         await browserSaveCollector.close();
+        analyticsRelay.close();
         process.exit(0);
     });
 }
@@ -767,8 +775,11 @@ app.post('/track', (req, res) => {
       // CORS 已经在全局中间件中处理
       
       // 获取 GA4 配置（可以从环境变量或配置文件读取）
-      const MEASUREMENT_ID = process.env.MEASUREMENT_ID || 'G-N573FESCGF';
-      const API_SECRET = process.env.API_SECRET || 'FIAv3qMJRgeXKzWBsJRceA';
+      const MEASUREMENT_ID = process.env.MEASUREMENT_ID;
+      const API_SECRET = process.env.API_SECRET;
+      if (!MEASUREMENT_ID || !API_SECRET) {
+        return res.status(503).json({ ok: false, error: 'GA4 proxy is not configured' });
+      }
 
       // 接收客户端发送的 GA4 请求体
       const requestBody = req.body;

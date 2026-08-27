@@ -8,3 +8,6 @@ state/
 out/
 dist/
 code.js
+.env
+.env.*
+!.env.example
