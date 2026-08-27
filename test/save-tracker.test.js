@@ -140,7 +140,7 @@ test('fixed realtime plugins use the Figma fetcher while other plugins use daily
     );
 
     assert.deepEqual(calls.sort(), ['fig-stats:200', 'figma:731451122947612104']);
-    assert.equal(plugins[0].saveSource, 'figma-live');
+    assert.equal(plugins[0].saveSource, 'figma-browser');
     assert.equal(plugins[1].saveSource, 'fig-stats-daily');
 });
 
@@ -155,6 +155,7 @@ test('realtime collection cools down and retries once after a Figma WAF challeng
         {
             realtimeDelayMs: 0,
             wafCooldownMs: 0,
+            retryRealtimeWaf: true,
             realtimeRotationOffset: 0,
             fetchRealtimeSaveCount: async () => {
                 attempts++;
@@ -172,6 +173,102 @@ test('realtime collection cools down and retries once after a Figma WAF challeng
     assert.equal(plugin.saves, 42);
     assert.equal(plugin.saveStatus, 'ok');
     assert.equal(plugin.saveError, null);
+});
+
+test('failed or skipped Save collection carries forward the latest successful value', async () => {
+    const browserPlugin = { id: 'browser', contentId: '731451122947612104', name: 'Browser' };
+    const dailyPlugin = { id: 'daily', contentId: '200', name: 'Daily' };
+
+    await collectSaveCounts(
+        [browserPlugin, dailyPlugin],
+        { plugins: [{ id: 'browser' }, { id: 'daily' }] },
+        [{ id: 'browser', saves: 40 }, { id: 'daily', saves: 15 }],
+        {
+            collectDailySaves: false,
+            lastSaveData: [
+                { id: 'browser', saves: 42, saveSource: 'figma-browser', saveCollectedAt: '2026-08-27T00:00:00.000Z' },
+                { id: 'daily', saves: 20, saveSource: 'fig-stats-daily', saveCollectedAt: '2026-08-27T00:00:00.000Z' }
+            ],
+            realtimeDelayMs: 0,
+            realtimeRotationOffset: 0,
+            fetchRealtimeSaveCount: async () => {
+                throw new Error('browser unavailable');
+            }
+        }
+    );
+
+    assert.deepEqual(
+        [browserPlugin, dailyPlugin].map(plugin => ({
+            id: plugin.id,
+            saves: plugin.saves,
+            growth: plugin.DoDSaves,
+            status: plugin.saveStatus,
+            source: plugin.saveSource
+        })),
+        [
+            { id: 'browser', saves: 42, growth: 2, status: 'stale', source: 'figma-browser' },
+            { id: 'daily', saves: 20, growth: 5, status: 'carried-forward', source: 'fig-stats-daily' }
+        ]
+    );
+});
+
+test('browser Save collection stops the run after a WAF challenge', async () => {
+    const plugins = [
+        { id: 'one', contentId: '731451122947612104', name: 'One' },
+        { id: 'two', contentId: '1404821057322599271', name: 'Two' }
+    ];
+    let attempts = 0;
+
+    await collectSaveCounts(
+        plugins,
+        { plugins: plugins.map(plugin => ({ id: plugin.id })) },
+        [],
+        {
+            lastSaveData: plugins.map((plugin, index) => ({
+                id: plugin.id,
+                saves: 10 + index,
+                saveSource: 'figma-browser'
+            })),
+            realtimeRotationOffset: 0,
+            realtimeDelayMs: 0,
+            fetchRealtimeSaveCount: async () => {
+                attempts++;
+                const error = new Error('Figma WAF challenge');
+                error.code = 'FIGMA_WAF_CHALLENGE';
+                throw error;
+            }
+        }
+    );
+
+    assert.equal(attempts, 1);
+    assert.deepEqual(plugins.map(plugin => plugin.saves), [10, 11]);
+    assert.deepEqual(plugins.map(plugin => plugin.saveStatus), ['stale', 'carried-forward']);
+});
+
+test('browser Save collection only processes the selected half-hour batch', async () => {
+    const plugins = [
+        { id: 'one', contentId: '731451122947612104', name: 'One' },
+        { id: 'two', contentId: '1404821057322599271', name: 'Two' },
+        { id: 'three', contentId: '1249759048471403961', name: 'Three' }
+    ];
+    const requested = [];
+
+    await collectSaveCounts(
+        plugins,
+        { plugins: plugins.map(plugin => ({ id: plugin.id })) },
+        [],
+        {
+            realtimeContentIds: ['1404821057322599271'],
+            realtimeDelayMs: 0,
+            fetchRealtimeSaveCount: async contentId => {
+                requested.push(contentId);
+                return 22;
+            }
+        }
+    );
+
+    assert.deepEqual(requested, ['1404821057322599271']);
+    assert.deepEqual(plugins.map(plugin => plugin.saveStatus), ['pending', 'ok', 'pending']);
 });
 
 test('mapWithConcurrency respects its concurrency limit', async () => {

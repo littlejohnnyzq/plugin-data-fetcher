@@ -4,7 +4,7 @@ const axios = require('axios');
 
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_RETRIES = 3;
-const DEFAULT_REALTIME_DELAY_MS = 8000;
+const DEFAULT_REALTIME_DELAY_MS = 2000;
 const DEFAULT_WAF_COOLDOWN_MS = 60000;
 const WATCH_RATIO = 0.5;
 const HIGH_USER_THRESHOLD = 50000;
@@ -21,6 +21,7 @@ const ALWAYS_WATCHED_CONTENT_IDS = new Set([
 ]);
 const REALTIME_SAVE_CONTENT_IDS = new Set(ALWAYS_WATCHED_CONTENT_IDS);
 const WATCHLIST_PATH = path.join(__dirname, 'state', 'save-watchlist.json');
+const SAVE_CACHE_PATH = path.join(__dirname, 'state', 'save-last-success.json');
 
 function toFiniteNumber(value) {
     if (value === null || value === undefined || value === '' || value === '--') return null;
@@ -128,6 +129,38 @@ function storeWatchlist(watchlist) {
     fs.writeFileSync(temporaryPath, JSON.stringify(watchlist, null, 2));
     fs.renameSync(temporaryPath, WATCHLIST_PATH);
     console.log(`Save watchlist updated: ${watchlist.watchedCount}/${watchlist.totalPlugins} plugins (${watchlist.sourceDate})`);
+}
+
+function loadSaveCache() {
+    if (!fs.existsSync(SAVE_CACHE_PATH)) return null;
+
+    try {
+        const cache = JSON.parse(fs.readFileSync(SAVE_CACHE_PATH, 'utf8'));
+        return Array.isArray(cache.plugins) ? cache.plugins : null;
+    } catch (error) {
+        console.error('Failed to load Save cache:', error.message);
+        return null;
+    }
+}
+
+function storeSaveCache(plugins) {
+    const cachedPlugins = plugins
+        .filter(plugin => plugin.isSaveTracked && toFiniteNumber(plugin.saves) !== null)
+        .map(plugin => ({
+            id: plugin.id,
+            contentId: plugin.contentId,
+            name: plugin.name,
+            saves: plugin.saves,
+            saveSource: plugin.saveSource,
+            saveCollectedAt: plugin.saveCollectedAt
+        }));
+    fs.mkdirSync(path.dirname(SAVE_CACHE_PATH), { recursive: true });
+    const temporaryPath = `${SAVE_CACHE_PATH}.tmp`;
+    fs.writeFileSync(temporaryPath, JSON.stringify({
+        updatedAt: new Date().toISOString(),
+        plugins: cachedPlugins
+    }, null, 2));
+    fs.renameSync(temporaryPath, SAVE_CACHE_PATH);
 }
 
 function extractSaveCount(html) {
@@ -247,20 +280,33 @@ async function mapWithConcurrency(items, concurrency, worker) {
 async function collectSaveCounts(plugins, watchlist, previousData, options = {}) {
     const watchedIds = new Set((watchlist?.plugins ?? []).map(plugin => plugin.id));
     const previousById = new Map((previousData ?? []).map(plugin => [plugin.id, plugin]));
+    const lastSuccessfulById = new Map((options.lastSaveData ?? []).map(plugin => [plugin.id, plugin]));
+    const requestedRealtimeContentIds = options.realtimeContentIds
+        ? new Set(options.realtimeContentIds.map(String))
+        : null;
     const watchedPlugins = plugins.filter(plugin => watchedIds.has(plugin.id));
-    const realtimePlugins = watchedPlugins.filter(plugin => REALTIME_SAVE_CONTENT_IDS.has(String(plugin.contentId)));
+    const realtimePlugins = watchedPlugins.filter(plugin => (
+        REALTIME_SAVE_CONTENT_IDS.has(String(plugin.contentId))
+        && (!requestedRealtimeContentIds || requestedRealtimeContentIds.has(String(plugin.contentId)))
+    ));
     const dailyPlugins = watchedPlugins.filter(plugin => !REALTIME_SAVE_CONTENT_IDS.has(String(plugin.contentId)));
 
     for (const plugin of plugins) {
+        const lastSuccessful = lastSuccessfulById.get(plugin.id);
+        const lastSaves = toFiniteNumber(lastSuccessful?.saves);
+        const previousSaves = toFiniteNumber(previousById.get(plugin.id)?.saves);
         plugin.isSaveTracked = watchedIds.has(plugin.id);
-        plugin.saves = null;
-        plugin.DoDSaves = '--';
-        plugin.saveSource = null;
-        plugin.saveStatus = plugin.isSaveTracked ? 'pending' : 'not-tracked';
+        plugin.saves = plugin.isSaveTracked ? lastSaves : null;
+        plugin.DoDSaves = lastSaves === null || previousSaves === null ? '--' : lastSaves - previousSaves;
+        plugin.saveSource = plugin.isSaveTracked ? lastSuccessful?.saveSource ?? null : null;
+        plugin.saveStatus = plugin.isSaveTracked
+            ? (lastSaves === null ? 'pending' : 'carried-forward')
+            : 'not-tracked';
         plugin.saveError = null;
+        plugin.saveCollectedAt = plugin.isSaveTracked ? lastSuccessful?.saveCollectedAt ?? null : null;
     }
 
-    async function collectPlugin(plugin, fetcher, source) {
+    async function collectPlugin(plugin, fetcher, source, successStatus = 'ok') {
         if (!plugin.contentId) {
             plugin.saveStatus = 'failed';
             console.warn(`Cannot collect Save count without contentId: ${plugin.name}`);
@@ -273,14 +319,13 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
             plugin.saves = saves;
             plugin.DoDSaves = previousSaves === null ? '--' : saves - previousSaves;
             plugin.saveSource = source;
-            plugin.saveStatus = 'ok';
+            plugin.saveStatus = successStatus;
             plugin.saveError = null;
             plugin.saveCollectedAt = new Date().toISOString();
             console.log(`Collected Saves for ${plugin.name} from ${source}: ${saves}`);
             return null;
         } catch (error) {
-            plugin.saveSource = source;
-            plugin.saveStatus = 'failed';
+            plugin.saveStatus = toFiniteNumber(plugin.saves) === null ? 'failed' : 'stale';
             plugin.saveError = error.message;
             console.error(`Failed to collect Saves for ${plugin.name} from ${source}:`, error.message);
             return error;
@@ -288,11 +333,13 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
     }
 
     const dailyFetcher = options.fetchDailySaveCount ?? options.fetchSaveCount ?? fetchSaveCount;
-    await mapWithConcurrency(
-        dailyPlugins,
-        options.concurrency ?? DEFAULT_CONCURRENCY,
-        plugin => collectPlugin(plugin, dailyFetcher, 'fig-stats-daily')
-    );
+    if (options.collectDailySaves !== false) {
+        await mapWithConcurrency(
+            dailyPlugins,
+            options.concurrency ?? DEFAULT_CONCURRENCY,
+            plugin => collectPlugin(plugin, dailyFetcher, 'fig-stats-daily')
+        );
+    }
 
     const realtimeFetcher = options.fetchRealtimeSaveCount ?? options.fetchSaveCount ?? fetchSaveCountFromFigma;
     const rotationOffset = realtimePlugins.length === 0
@@ -305,16 +352,29 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
 
     for (let index = 0; index < orderedRealtimePlugins.length; index++) {
         const plugin = orderedRealtimePlugins[index];
-        let error = await collectPlugin(plugin, realtimeFetcher, 'figma-live');
-        if (error?.code === 'FIGMA_WAF_CHALLENGE') {
+        let error = await collectPlugin(plugin, realtimeFetcher, 'figma-browser');
+        if (error && toFiniteNumber(plugin.saves) === null && options.fetchRealtimeFallbackSaveCount) {
+            await collectPlugin(plugin, options.fetchRealtimeFallbackSaveCount, 'fig-stats-fallback', 'stale');
+        }
+
+        if (error?.code === 'FIGMA_WAF_CHALLENGE' && options.retryRealtimeWaf === true) {
             const cooldownMs = options.wafCooldownMs ?? DEFAULT_WAF_COOLDOWN_MS;
             console.warn(`Figma WAF challenge detected; cooling down for ${cooldownMs}ms before retrying ${plugin.name}`);
             await new Promise(resolve => setTimeout(resolve, cooldownMs));
-            error = await collectPlugin(plugin, realtimeFetcher, 'figma-live');
+            error = await collectPlugin(plugin, realtimeFetcher, 'figma-browser');
+        } else if (error?.code === 'FIGMA_WAF_CHALLENGE' && options.stopOnRealtimeWaf !== false) {
+            console.warn('Stopping browser Save collection for this run after a Figma WAF challenge');
+            break;
+        } else if (error?.code === 'SAVE_BROWSER_UNAVAILABLE') {
+            console.warn('Stopping browser Save collection because Chromium is unavailable');
+            break;
         }
 
         if (index < orderedRealtimePlugins.length - 1) {
-            const delayMs = options.realtimeDelayMs ?? DEFAULT_REALTIME_DELAY_MS;
+            const baseDelayMs = options.realtimeDelayMs ?? DEFAULT_REALTIME_DELAY_MS;
+            const jitterMs = options.realtimeDelayJitterMs
+                ?? (options.realtimeDelayMs === undefined ? 2000 : 0);
+            const delayMs = baseDelayMs + Math.floor(Math.random() * (jitterMs + 1));
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
     }
@@ -326,6 +386,7 @@ module.exports = {
     ALWAYS_WATCHED_CONTENT_IDS,
     HIGH_USER_THRESHOLD,
     REALTIME_SAVE_CONTENT_IDS,
+    SAVE_CACHE_PATH,
     WATCHLIST_PATH,
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
@@ -335,6 +396,8 @@ module.exports = {
     fetchSaveCountFromFigma,
     fetchSaveCountFromFigStats,
     loadWatchlist,
+    loadSaveCache,
     mapWithConcurrency,
+    storeSaveCache,
     storeWatchlist
 };

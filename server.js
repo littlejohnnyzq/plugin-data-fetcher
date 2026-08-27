@@ -3,16 +3,34 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
+const { createBrowserSaveCollector } = require('./browser-save-collector');
 const {
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
     collectSaveCounts,
+    extractSaveCount,
+    fetchSaveCountFromFigStats,
+    loadSaveCache,
     loadWatchlist,
+    REALTIME_SAVE_CONTENT_IDS,
+    storeSaveCache,
     storeWatchlist
 } = require('./save-tracker');
 const app = express();
 const port = 1086;
 const FIXED_PLUGINS = [
+    {
+        contentId: '1370606842652257742',
+        searchQuery: 'i Charts Generate'
+    },
+    {
+        contentId: '1387823712562916211',
+        searchQuery: 'i3D'
+    },
+    {
+        contentId: '1414925802794094447',
+        searchQuery: 'inima animation'
+    },
     {
         contentId: '1473659572195493091',
         searchQuery: 'i Print CMYK'
@@ -38,6 +56,76 @@ const FIXED_PLUGINS = [
         searchQuery: 'Jitter Animation'
     }
 ];
+const browserSaveCollector = createBrowserSaveCollector({ extractSaveCount });
+const REALTIME_SAVE_BATCH_SIZE = 3;
+const REALTIME_SAVE_DELAY_MS = 8000;
+const REALTIME_SAVE_DELAY_JITTER_MS = 4000;
+
+function wait(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function prefetchRealtimeSaveCounts(currentTime) {
+    const allContentIds = [...REALTIME_SAVE_CONTENT_IDS];
+    const batchSize = Math.min(REALTIME_SAVE_BATCH_SIZE, allContentIds.length);
+    const batchNumber = Math.floor(currentTime.getTime() / 1800000);
+    const offset = (batchNumber * batchSize) % allContentIds.length;
+    const orderedContentIds = [
+        ...allContentIds.slice(offset),
+        ...allContentIds.slice(0, offset)
+    ];
+    const selectedContentIds = orderedContentIds.slice(0, batchSize);
+    const results = new Map();
+
+    console.log(`Browser Save batch: ${selectedContentIds.join(', ')}`);
+    try {
+        await browserSaveCollector.warmUp();
+    } catch (error) {
+        console.error('Failed to warm up Figma browser:', error.message);
+        for (const contentId of selectedContentIds) results.set(contentId, { error });
+        return createPrefetchedSaveResult(selectedContentIds, results);
+    }
+
+    for (let index = 0; index < selectedContentIds.length; index++) {
+        const contentId = selectedContentIds[index];
+        try {
+            const saves = await browserSaveCollector.fetchSaveCount(contentId);
+            results.set(contentId, { saves });
+            console.log(`Prefetched browser Saves for ${contentId}: ${saves}`);
+        } catch (error) {
+            results.set(contentId, { error });
+            console.error(`Failed to prefetch browser Saves for ${contentId}:`, error.message);
+            if (error.code === 'FIGMA_WAF_CHALLENGE' || error.code === 'FIGMA_WAF_CAPTCHA') {
+                for (const deferredId of selectedContentIds.slice(index + 1)) {
+                    const deferredError = new Error('Browser Save collection deferred after WAF challenge');
+                    deferredError.code = 'SAVE_BROWSER_DEFERRED';
+                    results.set(deferredId, { error: deferredError });
+                }
+                break;
+            }
+        }
+
+        if (index < selectedContentIds.length - 1) {
+            const delayMs = REALTIME_SAVE_DELAY_MS
+                + Math.floor(Math.random() * (REALTIME_SAVE_DELAY_JITTER_MS + 1));
+            await wait(delayMs);
+        }
+    }
+
+    return createPrefetchedSaveResult(selectedContentIds, results);
+}
+
+function createPrefetchedSaveResult(contentIds, results) {
+    return {
+        contentIds,
+        fetchSaveCount: async contentId => {
+            const result = results.get(String(contentId));
+            if (!result) throw new Error(`No prefetched browser Save result for ${contentId}`);
+            if (result.error) throw result.error;
+            return result.saves;
+        }
+    };
+}
 
 // 添加 CORS 支持
 app.use((req, res, next) => {
@@ -133,6 +221,44 @@ function findPreviousData(currentTime) {
     return previousData;
 }
 
+function findLatestSuccessfulSaveData(currentTime) {
+    const latestById = new Map();
+    for (let daysAgo = 0; daysAgo <= 7; daysAgo++) {
+        const date = new Date(currentTime);
+        date.setDate(date.getDate() - daysAgo);
+        const year = date.getFullYear().toString();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dirPath = path.join(__dirname, 'data', year, month, day);
+        if (!fs.existsSync(dirPath)) continue;
+
+        const files = fs.readdirSync(dirPath)
+            .filter(file => /^\d{2}-\d{2}\.json$/.test(file))
+            .sort()
+            .reverse();
+        for (const file of files) {
+            try {
+                const plugins = JSON.parse(fs.readFileSync(path.join(dirPath, file), 'utf8'));
+                for (const plugin of plugins) {
+                    if (
+                        !latestById.has(plugin.id)
+                        && plugin.saves !== null
+                        && plugin.saves !== undefined
+                        && plugin.saves !== ''
+                        && plugin.saves !== '--'
+                        && Number.isFinite(Number(plugin.saves))
+                    ) {
+                        latestById.set(plugin.id, plugin);
+                    }
+                }
+            } catch (error) {
+                console.warn(`Ignoring unreadable collection file ${file}:`, error.message);
+            }
+        }
+    }
+    return latestById.size > 0 ? [...latestById.values()] : null;
+}
+
 app.listen(1086, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${port}`);
     console.log('Available endpoints:');
@@ -150,25 +276,48 @@ function startFetchTask() {
 
 startFetchTask();
 
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, async () => {
+        console.log(`${signal} received; closing Save browser`);
+        await browserSaveCollector.close();
+        process.exit(0);
+    });
+}
+
 async function fetchData() {
     try {
         const now = new Date();
         const isMidnight = now.getHours() === 0 && now.getMinutes() === 0;
+        const realtimePrefetch = await prefetchRealtimeSaveCounts(now);
+        const lastSaveData = loadSaveCache() ?? findLatestSuccessfulSaveData(now);
+        const saveOptions = {
+            collectDailySaves: isMidnight || !lastSaveData,
+            lastSaveData,
+            fetchRealtimeSaveCount: realtimePrefetch.fetchSaveCount,
+            fetchRealtimeFallbackSaveCount: fetchSaveCountFromFigStats,
+            realtimeContentIds: realtimePrefetch.contentIds,
+            realtimeDelayMs: 0,
+            realtimeDelayJitterMs: 0,
+            stopOnRealtimeWaf: false
+        };
 
         if (isMidnight) {
             const previousDayTime = new Date(now.getTime() - 86400000); // 减去一天的毫秒数
-            const previousData = findPreviousData(previousDayTime); // 改为传递当前时间
+            const previousData = findPreviousData(now);
             const sourceDate = formatLocalDate(previousDayTime);
             const pluginData = await fetchPluginData(previousData, {
                 refreshWatchlist: true,
-                watchlistSourceDate: sourceDate
+                watchlistSourceDate: sourceDate,
+                ...saveOptions
             }); // 获取当前插件数据，并按上一完整日增长更新关注清单
+            storeSaveCache(pluginData);
             storeData(pluginData, now); // 将当前时间传递给storeData
             storeDataAsEndOfDay(pluginData, previousDayTime); // 特殊处理：同时存储数据作为上一天的最后数据点
 
         } else {
             const previousData = findPreviousData(now); // 改为传递当前时间
-            const pluginData = await fetchPluginData(previousData); // 获取当前插件数据
+            const pluginData = await fetchPluginData(previousData, saveOptions); // 获取当前插件数据
+            storeSaveCache(pluginData);
             storeData(pluginData, now); // 将当前时间传递给storeData
         }
     } catch (error) {
@@ -368,7 +517,17 @@ async function fetchPluginData(previousData, options = {}) {
                 storeWatchlist(watchlist);
             }
 
-            await collectSaveCounts(allPlugins, watchlist, previousData, { concurrency: 4 });
+            await collectSaveCounts(allPlugins, watchlist, previousData, {
+                concurrency: 4,
+                collectDailySaves: options.collectDailySaves,
+                lastSaveData: options.lastSaveData,
+                fetchRealtimeSaveCount: options.fetchRealtimeSaveCount,
+                fetchRealtimeFallbackSaveCount: options.fetchRealtimeFallbackSaveCount,
+                realtimeContentIds: options.realtimeContentIds,
+                realtimeDelayMs: options.realtimeDelayMs,
+                realtimeDelayJitterMs: options.realtimeDelayJitterMs,
+                stopOnRealtimeWaf: options.stopOnRealtimeWaf
+            });
             return allPlugins;
 
         } catch (error) {
