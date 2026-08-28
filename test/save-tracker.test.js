@@ -5,7 +5,6 @@ const {
     buildWatchlist,
     collectSaveCounts,
     extractSaveCount,
-    fetchSaveCountFromFigStats,
     mapWithConcurrency
 } = require('../save-tracker');
 
@@ -60,17 +59,6 @@ test('mandatory rules are added to an existing watchlist immediately', () => {
     assert.deepEqual(watchlist.plugins.map(plugin => plugin.id), ['growth', 'high-users', 'fixed']);
 });
 
-test('fetchSaveCountFromFigStats maps installs to Saves', async () => {
-    const saves = await fetchSaveCountFromFigStats('123', {
-        request: async url => {
-            assert.equal(url, 'https://api.fig-stats.com/plugins/123');
-            return { data: { installs: 456 } };
-        }
-    });
-
-    assert.equal(saves, 456);
-});
-
 test('extractSaveCount reads UseAction from Figma JSON-LD', () => {
     const html = `<!doctype html><script type="application/ld+json">${JSON.stringify({
         '@graph': [{
@@ -85,9 +73,9 @@ test('extractSaveCount reads UseAction from Figma JSON-LD', () => {
     assert.equal(extractSaveCount('<html></html>'), null);
 });
 
-test('collectSaveCounts only requests watched plugins and calculates daily growth', async () => {
+test('collectSaveCounts only requests watched browser plugins and calculates growth from browser data', async () => {
     const plugins = [
-        { id: 'watched', contentId: '101', name: 'Watched' },
+        { id: 'watched', contentId: '731451122947612104', name: 'Watched' },
         { id: 'ignored', contentId: '102', name: 'Ignored' }
     ];
     const requestedContentIds = [];
@@ -95,16 +83,17 @@ test('collectSaveCounts only requests watched plugins and calculates daily growt
     await collectSaveCounts(
         plugins,
         { plugins: [{ id: 'watched' }] },
-        [{ id: 'watched', saves: 30 }],
+        [{ id: 'watched', saves: 30, saveSource: 'figma-browser' }],
         {
-            fetchSaveCount: async contentId => {
+            realtimeDelayMs: 0,
+            fetchRealtimeSaveCount: async contentId => {
                 requestedContentIds.push(contentId);
                 return 37;
             }
         }
     );
 
-    assert.deepEqual(requestedContentIds, ['101']);
+    assert.deepEqual(requestedContentIds, ['731451122947612104']);
     assert.deepEqual(
         plugins.map(plugin => ({ id: plugin.id, tracked: plugin.isSaveTracked, saves: plugin.saves, growth: plugin.DoDSaves })),
         [
@@ -114,7 +103,7 @@ test('collectSaveCounts only requests watched plugins and calculates daily growt
     );
 });
 
-test('fixed realtime plugins use the Figma fetcher while other plugins use daily stats', async () => {
+test('non-browser plugins do not use FigStats or another Save fetcher', async () => {
     const plugins = [
         { id: 'realtime', contentId: '731451122947612104', name: 'Realtime' },
         { id: 'daily', contentId: '200', name: 'Daily' }
@@ -131,17 +120,14 @@ test('fixed realtime plugins use the Figma fetcher while other plugins use daily
             fetchRealtimeSaveCount: async contentId => {
                 calls.push(`figma:${contentId}`);
                 return 10;
-            },
-            fetchDailySaveCount: async contentId => {
-                calls.push(`fig-stats:${contentId}`);
-                return 20;
             }
         }
     );
 
-    assert.deepEqual(calls.sort(), ['fig-stats:200', 'figma:731451122947612104']);
+    assert.deepEqual(calls, ['figma:731451122947612104']);
     assert.equal(plugins[0].saveSource, 'figma-browser');
-    assert.equal(plugins[1].saveSource, 'fig-stats-daily');
+    assert.equal(plugins[1].saves, null);
+    assert.equal(plugins[1].saveSource, null);
 });
 
 test('realtime collection cools down and retries once after a Figma WAF challenge', async () => {
@@ -175,16 +161,18 @@ test('realtime collection cools down and retries once after a Figma WAF challeng
     assert.equal(plugin.saveError, null);
 });
 
-test('failed or skipped Save collection carries forward the latest successful value', async () => {
+test('failed browser collection carries forward browser values and ignores FigStats values', async () => {
     const browserPlugin = { id: 'browser', contentId: '731451122947612104', name: 'Browser' };
     const dailyPlugin = { id: 'daily', contentId: '200', name: 'Daily' };
 
     await collectSaveCounts(
         [browserPlugin, dailyPlugin],
         { plugins: [{ id: 'browser' }, { id: 'daily' }] },
-        [{ id: 'browser', saves: 40 }, { id: 'daily', saves: 15 }],
+        [
+            { id: 'browser', saves: 40, saveSource: 'figma-browser' },
+            { id: 'daily', saves: 15, saveSource: 'fig-stats-daily' }
+        ],
         {
-            collectDailySaves: false,
             lastSaveData: [
                 { id: 'browser', saves: 42, saveSource: 'figma-browser', saveCollectedAt: '2026-08-27T00:00:00.000Z' },
                 { id: 'daily', saves: 20, saveSource: 'fig-stats-daily', saveCollectedAt: '2026-08-27T00:00:00.000Z' }
@@ -207,7 +195,7 @@ test('failed or skipped Save collection carries forward the latest successful va
         })),
         [
             { id: 'browser', saves: 42, growth: 2, status: 'stale', source: 'figma-browser' },
-            { id: 'daily', saves: 20, growth: 5, status: 'carried-forward', source: 'fig-stats-daily' }
+            { id: 'daily', saves: null, growth: '--', status: 'pending', source: null }
         ]
     );
 });

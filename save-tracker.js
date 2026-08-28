@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
-const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_RETRIES = 3;
 const DEFAULT_REALTIME_DELAY_MS = 2000;
 const DEFAULT_WAF_COOLDOWN_MS = 60000;
@@ -136,7 +135,9 @@ function loadSaveCache() {
 
     try {
         const cache = JSON.parse(fs.readFileSync(SAVE_CACHE_PATH, 'utf8'));
-        return Array.isArray(cache.plugins) ? cache.plugins : null;
+        if (!Array.isArray(cache.plugins)) return null;
+        const browserPlugins = cache.plugins.filter(plugin => plugin.saveSource === 'figma-browser');
+        return browserPlugins.length > 0 ? browserPlugins : null;
     } catch (error) {
         console.error('Failed to load Save cache:', error.message);
         return null;
@@ -145,7 +146,11 @@ function loadSaveCache() {
 
 function storeSaveCache(plugins) {
     const cachedPlugins = plugins
-        .filter(plugin => plugin.isSaveTracked && toFiniteNumber(plugin.saves) !== null)
+        .filter(plugin => (
+            plugin.isSaveTracked
+            && plugin.saveSource === 'figma-browser'
+            && toFiniteNumber(plugin.saves) !== null
+        ))
         .map(plugin => ({
             id: plugin.id,
             contentId: plugin.contentId,
@@ -229,38 +234,6 @@ async function fetchSaveCountFromFigma(contentId, options = {}) {
     return null;
 }
 
-async function fetchSaveCountFromFigStats(contentId, options = {}) {
-    const request = options.request ?? axios.get;
-    const url = `https://api.fig-stats.com/plugins/${encodeURIComponent(contentId)}`;
-    const response = await request(url, {
-        headers: { 'Accept': 'application/json' },
-        timeout: 10000
-    });
-    const saveCount = toFiniteNumber(response.data?.installs);
-    if (saveCount === null) throw new Error('Fig Stats installs count not found');
-    return saveCount;
-}
-
-async function fetchSaveCount(contentId, options = {}) {
-    const preferredSource = options.source ?? process.env.SAVE_COUNT_SOURCE ?? 'fig-stats';
-
-    if (preferredSource === 'figma') {
-        try {
-            return await fetchSaveCountFromFigma(contentId, options.figma);
-        } catch (error) {
-            console.warn(`Figma Save request failed for ${contentId}; falling back to Fig Stats: ${error.message}`);
-            return fetchSaveCountFromFigStats(contentId, options.figStats);
-        }
-    }
-
-    try {
-        return await fetchSaveCountFromFigStats(contentId, options.figStats);
-    } catch (error) {
-        console.warn(`Fig Stats Save request failed for ${contentId}; falling back to Figma: ${error.message}`);
-        return fetchSaveCountFromFigma(contentId, options.figma);
-    }
-}
-
 async function mapWithConcurrency(items, concurrency, worker) {
     const results = new Array(items.length);
     let nextIndex = 0;
@@ -279,8 +252,16 @@ async function mapWithConcurrency(items, concurrency, worker) {
 
 async function collectSaveCounts(plugins, watchlist, previousData, options = {}) {
     const watchedIds = new Set((watchlist?.plugins ?? []).map(plugin => plugin.id));
-    const previousById = new Map((previousData ?? []).map(plugin => [plugin.id, plugin]));
-    const lastSuccessfulById = new Map((options.lastSaveData ?? []).map(plugin => [plugin.id, plugin]));
+    const previousById = new Map(
+        (previousData ?? [])
+            .filter(plugin => plugin.saveSource === 'figma-browser')
+            .map(plugin => [plugin.id, plugin])
+    );
+    const lastSuccessfulById = new Map(
+        (options.lastSaveData ?? [])
+            .filter(plugin => plugin.saveSource === 'figma-browser')
+            .map(plugin => [plugin.id, plugin])
+    );
     const requestedRealtimeContentIds = options.realtimeContentIds
         ? new Set(options.realtimeContentIds.map(String))
         : null;
@@ -289,7 +270,6 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
         REALTIME_SAVE_CONTENT_IDS.has(String(plugin.contentId))
         && (!requestedRealtimeContentIds || requestedRealtimeContentIds.has(String(plugin.contentId)))
     ));
-    const dailyPlugins = watchedPlugins.filter(plugin => !REALTIME_SAVE_CONTENT_IDS.has(String(plugin.contentId)));
 
     for (const plugin of plugins) {
         const lastSuccessful = lastSuccessfulById.get(plugin.id);
@@ -332,16 +312,7 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
         }
     }
 
-    const dailyFetcher = options.fetchDailySaveCount ?? options.fetchSaveCount ?? fetchSaveCount;
-    if (options.collectDailySaves !== false) {
-        await mapWithConcurrency(
-            dailyPlugins,
-            options.concurrency ?? DEFAULT_CONCURRENCY,
-            plugin => collectPlugin(plugin, dailyFetcher, 'fig-stats-daily')
-        );
-    }
-
-    const realtimeFetcher = options.fetchRealtimeSaveCount ?? options.fetchSaveCount ?? fetchSaveCountFromFigma;
+    const realtimeFetcher = options.fetchRealtimeSaveCount ?? fetchSaveCountFromFigma;
     const rotationOffset = realtimePlugins.length === 0
         ? 0
         : (options.realtimeRotationOffset ?? Math.floor(Date.now() / 1800000)) % realtimePlugins.length;
@@ -353,9 +324,6 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
     for (let index = 0; index < orderedRealtimePlugins.length; index++) {
         const plugin = orderedRealtimePlugins[index];
         let error = await collectPlugin(plugin, realtimeFetcher, 'figma-browser');
-        if (error && toFiniteNumber(plugin.saves) === null && options.fetchRealtimeFallbackSaveCount) {
-            await collectPlugin(plugin, options.fetchRealtimeFallbackSaveCount, 'fig-stats-fallback', 'stale');
-        }
 
         if (error?.code === 'FIGMA_WAF_CHALLENGE' && options.retryRealtimeWaf === true) {
             const cooldownMs = options.wafCooldownMs ?? DEFAULT_WAF_COOLDOWN_MS;
@@ -392,9 +360,7 @@ module.exports = {
     buildWatchlist,
     collectSaveCounts,
     extractSaveCount,
-    fetchSaveCount,
     fetchSaveCountFromFigma,
-    fetchSaveCountFromFigStats,
     loadWatchlist,
     loadSaveCache,
     mapWithConcurrency,

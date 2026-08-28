@@ -43,3 +43,32 @@ test('schedules the next boundary before waiting for the current task', async ()
     resolveTask();
     await unfinishedTask;
 });
+
+test('waits for the same boundary when the timer wakes early', async () => {
+    const halfHour = 30 * 60 * 1000;
+    let currentTime = 10 * 60 * 1000;
+    const timers = [];
+    const taskBoundaries = [];
+
+    scheduleAlignedTask(boundaryTimeMs => taskBoundaries.push(boundaryTimeMs), {
+        intervalMs: halfHour,
+        now: () => currentTime,
+        setTimer: (callback, delay) => {
+            timers.push({ callback, delay });
+            return timers.length;
+        },
+        clearTimer: () => {}
+    });
+
+    currentTime = halfHour - 1;
+    timers[0].callback();
+    assert.equal(timers[1].delay, 1);
+    assert.deepEqual(taskBoundaries, []);
+
+    currentTime = halfHour;
+    timers[1].callback();
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.deepEqual(taskBoundaries, [halfHour]);
+    assert.equal(timers[2].delay, halfHour);
+});

@@ -16,6 +16,32 @@
             margin: 0;
         }
 
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .logout-form {
+            margin: 0;
+        }
+
+        .logout-button {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #236de3;
+            font-size: 13px;
+            font-family: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            text-decoration: underline;
+        }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -65,6 +91,47 @@
             background-color: #f2f2f2;
             font-size: 13px;
             font-weight: 400;
+            padding: 6px 8px;
+        }
+
+        #data-table td.metric-cell {
+            padding: 2px 8px;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .metric-value {
+            color: #111;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 15px;
+        }
+
+        .metric-delta {
+            color: #777;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 12px;
+        }
+
+        .metric-delta.positive {
+            color: #d93025;
+        }
+
+        .metric-delta.negative {
+            color: #188038;
+        }
+
+        .metric-delta.user-low {
+            color: #555;
+        }
+
+        .metric-delta.user-medium {
+            color: #d88900;
+        }
+
+        .metric-delta.user-high {
+            color: #d93025;
         }
 
         .time-label {
@@ -122,11 +189,126 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        .trend-panel {
+            margin: 4px 0 8px;
+            padding: 10px 12px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .trend-toolbar,
+        .trend-control-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .trend-toolbar {
+            justify-content: space-between;
+            gap: 10px 16px;
+            margin-bottom: 4px;
+        }
+
+        .trend-control-group button {
+            padding: 4px 9px;
+            border: 1px solid #d5d5d5;
+            border-radius: 5px;
+            background: #fff;
+            color: #444;
+            cursor: pointer;
+        }
+
+        .trend-control-group button.active {
+            border-color: #236de3;
+            background: #236de3;
+            color: #fff;
+        }
+
+        #trend-day {
+            height: 25px;
+            box-sizing: border-box;
+            border: 1px solid #d5d5d5;
+            border-radius: 5px;
+        }
+
+        .trend-chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        #trend-chart {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .trend-tooltip {
+            position: absolute;
+            z-index: 2;
+            display: none;
+            min-width: 170px;
+            padding: 7px 9px;
+            border: 1px solid #d8d8d8;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+            pointer-events: none;
+            font-size: 11px;
+            line-height: 17px;
+        }
+
+        .trend-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px 12px;
+            min-height: 20px;
+            margin-top: 2px;
+        }
+
+        .trend-legend-item {
+            max-width: 260px;
+            padding: 1px 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            overflow: hidden;
+            color: #333;
+            font-size: 11px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .trend-legend-item.hidden-series {
+            opacity: 0.35;
+        }
+
+        .trend-legend-line {
+            display: inline-block;
+            width: 16px;
+            height: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border-radius: 2px;
+        }
+
+        #trend-status {
+            color: #777;
+            font-size: 11px;
+        }
     </style>
 </head>
 
 <body>
-    <h2>插件数据采集</h2>
+    <header class="page-header">
+        <h2>插件数据采集</h2>
+        <form class="logout-form" action="/product/plugin-data/logout" method="post">
+            <button class="logout-button" type="submit">退出后台</button>
+        </form>
+    </header>
     <!-- <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>
         <input type="number" style="width: 48px;" id="interval" value="30" disabled>
@@ -135,6 +317,27 @@
        
     </div> -->
 
+    <section class="trend-panel">
+        <div class="trend-toolbar">
+            <div class="trend-control-group" id="trend-metric-controls">
+                <button type="button" data-metric="users">用户日增</button>
+                <button type="button" data-metric="likes">点赞日增</button>
+                <button type="button" class="active" data-metric="saves">保存日增</button>
+            </div>
+            <div class="trend-control-group" id="trend-period-controls">
+                <button type="button" class="active" data-mode="hourly">单日分时</button>
+                <button type="button" data-mode="daily" data-days="30">最近1个月</button>
+                <button type="button" data-mode="daily" data-days="90">最近3个月</button>
+                <input id="trend-day" type="date" aria-label="选择分时数据日期">
+                <span id="trend-status"></span>
+            </div>
+        </div>
+        <div class="trend-chart-wrap">
+            <canvas id="trend-chart"></canvas>
+            <div id="trend-tooltip" class="trend-tooltip"></div>
+        </div>
+        <div id="trend-legend" class="trend-legend"></div>
+    </section>
 
     <div class="container">
         <div class="time-columns">
@@ -155,11 +358,8 @@
                         <th></th>
                         <th>插件名</th>
                         <th>用户数</th>
-                        <th style="white-space: nowrap;">日增</th>
                         <th>点赞</th>
-                        <th style="white-space: nowrap;">日增</th>
                         <th>保存</th>
-                        <th style="white-space: nowrap;">日增</th>
                     </tr>
                 </thead>
                 <tbody id="data-body">
@@ -177,14 +377,27 @@
             '1414925802794094447',
             '1473659572195493091'
         ]);
+        const PLUGIN_DATA_API = '/api/plugin-data';
+        const TREND_COLORS = [
+            '#236de3', '#e34a33', '#18a058', '#8b5cf6', '#e59f00',
+            '#00a6a6', '#d946ef', '#795548', '#64748b'
+        ];
+        const trendState = {
+            metric: 'saves',
+            mode: 'hourly',
+            days: 30,
+            data: null,
+            hiddenContentIds: new Set()
+        };
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
             fetchDirectory();  // 获取目录信息
+            initializeTrendChart();
         });
 
         async function fetchDirectory() {
             try {
-                const response = await fetch('/get-directory');
+                const response = await fetch(`${PLUGIN_DATA_API}/get-directory`);
                 const directory = await response.json();
                 // console.log('Directory received:', directory);
                 displayTimeLabels(directory);
@@ -203,30 +416,311 @@
             getData(years[0], months[0], days[0], initialTime);
         }
 
-        document.getElementById('fetchOnce-button').addEventListener('click', () => {
-            fetchData();
+        document.getElementById('fetchOnce-button').addEventListener('click', event => {
+            fetchData(event.currentTarget);
         });
 
-        async function fetchData() {
+        async function fetchData(button) {
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '采集中…';
+
             try {
-                const response = await fetch('/fetch-plugin-data');
-                // console.log('Response received:', response);
-                // 检查响应状态是否为成功
-                if (response.ok) {
-                    // console.log('Data fetched successfully, reloading page...');
-                    location.reload();  // 刷新当前页面
-                } else {
-                    console.error('Failed to fetch data:', response.status);
+                const response = await fetch(`${PLUGIN_DATA_API}/fetch-plugin-data`);
+                if (!response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.error || `采集请求失败（${response.status}）`);
                 }
 
+                button.textContent = '采集完成';
+                setTimeout(() => location.reload(), 500);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                button.textContent = '采集失败，重试';
+                button.title = error.message;
+                button.disabled = false;
+
+                setTimeout(() => {
+                    if (!button.disabled) button.textContent = originalText;
+                }, 3000);
             }
+        }
+
+        function formatLocalDateInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function initializeTrendChart() {
+            const dayInput = document.getElementById('trend-day');
+            dayInput.value = formatLocalDateInput(new Date());
+
+            document.querySelectorAll('#trend-metric-controls button').forEach(button => {
+                button.addEventListener('click', () => {
+                    trendState.metric = button.dataset.metric;
+                    setActiveTrendButton('#trend-metric-controls button', button);
+                    loadPluginTrends();
+                });
+            });
+
+            document.querySelectorAll('#trend-period-controls button').forEach(button => {
+                button.addEventListener('click', () => {
+                    trendState.mode = button.dataset.mode;
+                    trendState.days = Number(button.dataset.days || 30);
+                    dayInput.style.display = trendState.mode === 'hourly' ? '' : 'none';
+                    setActiveTrendButton('#trend-period-controls button', button);
+                    loadPluginTrends();
+                });
+            });
+
+            dayInput.addEventListener('change', loadPluginTrends);
+            document.getElementById('trend-chart').addEventListener('mousemove', showTrendTooltip);
+            document.getElementById('trend-chart').addEventListener('mouseleave', hideTrendTooltip);
+            window.addEventListener('resize', () => drawTrendChart(trendState.data));
+            loadPluginTrends();
+        }
+
+        function setActiveTrendButton(selector, activeButton) {
+            document.querySelectorAll(selector).forEach(button => button.classList.remove('active'));
+            activeButton.classList.add('active');
+        }
+
+        async function loadPluginTrends() {
+            const status = document.getElementById('trend-status');
+            const dayInput = document.getElementById('trend-day');
+            const params = new URLSearchParams({
+                metric: trendState.metric,
+                mode: trendState.mode
+            });
+            if (trendState.mode === 'hourly') params.set('day', dayInput.value);
+            else params.set('days', String(trendState.days));
+
+            status.textContent = '加载中…';
+            try {
+                const response = await fetch(`${PLUGIN_DATA_API}/plugin-trends?${params}`);
+                if (!response.ok) throw new Error(`趋势数据请求失败（${response.status}）`);
+                trendState.data = await response.json();
+                status.textContent = trendState.data.labels.length > 0
+                    ? `${trendState.data.labels.length} 个时间点`
+                    : '暂无数据';
+                renderTrendLegend(trendState.data.series);
+                drawTrendChart(trendState.data);
+            } catch (error) {
+                console.error('Error loading plugin trends:', error);
+                status.textContent = '加载失败';
+                trendState.data = null;
+                renderTrendLegend([]);
+                drawTrendChart(null, error.message);
+            }
+        }
+
+        function renderTrendLegend(series) {
+            const legend = document.getElementById('trend-legend');
+            legend.innerHTML = '';
+            series.forEach((item, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'trend-legend-item';
+                if (trendState.hiddenContentIds.has(item.contentId)) {
+                    button.classList.add('hidden-series');
+                }
+                button.title = item.name;
+
+                const line = document.createElement('span');
+                line.className = 'trend-legend-line';
+                line.style.backgroundColor = TREND_COLORS[index % TREND_COLORS.length];
+                button.appendChild(line);
+                button.appendChild(document.createTextNode(abbreviateTrendPluginName(item.name)));
+                button.addEventListener('click', () => {
+                    if (trendState.hiddenContentIds.has(item.contentId)) {
+                        trendState.hiddenContentIds.delete(item.contentId);
+                    } else {
+                        trendState.hiddenContentIds.add(item.contentId);
+                    }
+                    renderTrendLegend(series);
+                    drawTrendChart(trendState.data);
+                });
+                legend.appendChild(button);
+            });
+        }
+
+        function getVisibleTrendSeries(data) {
+            return (data?.series ?? [])
+                .map((series, index) => ({ ...series, color: TREND_COLORS[index % TREND_COLORS.length] }))
+                .filter(series => !trendState.hiddenContentIds.has(series.contentId));
+        }
+
+        function drawTrendChart(data, message = '') {
+            const canvas = document.getElementById('trend-chart');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.clientWidth || 900;
+            const height = canvas.clientHeight || 280;
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+
+            const labels = data?.labels ?? [];
+            const visibleSeries = getVisibleTrendSeries(data);
+            const values = visibleSeries.flatMap(series => series.values).filter(Number.isFinite);
+            const pad = { top: 12, right: 16, bottom: 30, left: 62 };
+            const plotWidth = width - pad.left - pad.right;
+            const plotHeight = height - pad.top - pad.bottom;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, width, height);
+            if (labels.length === 0 || values.length === 0) {
+                ctx.fillStyle = '#888';
+                ctx.font = '13px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(message || '当前范围暂无可用数据', width / 2, height / 2);
+                return;
+            }
+
+            let minimum = Math.min(...values);
+            let maximum = Math.max(...values);
+            if (minimum === maximum) {
+                const padding = Math.max(1, Math.abs(maximum) * 0.01);
+                minimum = minimum >= 0 ? 0 : minimum - padding;
+                maximum = maximum <= 0 ? 0 : maximum + padding;
+            } else {
+                const padding = (maximum - minimum) * 0.06;
+                minimum = minimum >= 0 ? 0 : minimum - padding;
+                maximum = maximum <= 0 ? 0 : maximum + padding;
+            }
+
+            ctx.font = '11px Arial';
+            for (let tick = 0; tick <= 4; tick++) {
+                const ratio = tick / 4;
+                const y = pad.top + plotHeight * ratio;
+                const value = maximum - (maximum - minimum) * ratio;
+                ctx.strokeStyle = '#edf0f3';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(width - pad.right, y);
+                ctx.stroke();
+                ctx.fillStyle = '#777';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(formatCompactNumber(value), pad.left - 7, y);
+            }
+
+            const xAt = index => labels.length === 1
+                ? pad.left + plotWidth / 2
+                : pad.left + (plotWidth * index) / (labels.length - 1);
+            const yAt = value => pad.top + ((maximum - value) / (maximum - minimum)) * plotHeight;
+
+            visibleSeries.forEach(series => {
+                ctx.strokeStyle = series.color;
+                ctx.lineWidth = 1.7;
+                ctx.beginPath();
+                let drawing = false;
+                series.values.forEach((value, index) => {
+                    if (!Number.isFinite(value)) {
+                        drawing = false;
+                        return;
+                    }
+                    const x = xAt(index);
+                    const y = yAt(value);
+                    if (drawing) ctx.lineTo(x, y);
+                    else ctx.moveTo(x, y);
+                    drawing = true;
+                });
+                ctx.stroke();
+            });
+
+            const labelStep = Math.max(1, Math.ceil(labels.length / 8));
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            labels.forEach((label, index) => {
+                if (index % labelStep !== 0 && index !== labels.length - 1) return;
+                const displayLabel = trendState.mode === 'daily' ? label.slice(5) : label;
+                ctx.fillText(displayLabel, xAt(index), height - pad.bottom + 8);
+            });
+        }
+
+        function formatCompactNumber(value) {
+            const absolute = Math.abs(value);
+            if (absolute >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+            if (absolute >= 1000) return `${(value / 1000).toFixed(1)}K`;
+            return Math.round(value).toLocaleString('zh-CN');
+        }
+
+        function showTrendTooltip(event) {
+            const data = trendState.data;
+            if (!data?.labels?.length) return;
+            const canvas = event.currentTarget;
+            const rect = canvas.getBoundingClientRect();
+            const plotLeft = 62;
+            const plotRight = 16;
+            const plotWidth = rect.width - plotLeft - plotRight;
+            const relativeX = Math.max(0, Math.min(plotWidth, event.clientX - rect.left - plotLeft));
+            const index = data.labels.length === 1
+                ? 0
+                : Math.round((relativeX / plotWidth) * (data.labels.length - 1));
+            const visibleSeries = getVisibleTrendSeries(data);
+            const tooltip = document.getElementById('trend-tooltip');
+            const rows = visibleSeries
+                .map(series => ({ ...series, value: series.values[index] }))
+                .filter(series => Number.isFinite(series.value));
+            if (rows.length === 0) return hideTrendTooltip();
+
+            tooltip.innerHTML = '';
+            const title = document.createElement('strong');
+            title.textContent = data.labels[index];
+            tooltip.appendChild(title);
+            rows.forEach(series => {
+                const row = document.createElement('div');
+                const marker = document.createElement('span');
+                marker.className = 'trend-legend-line';
+                marker.style.backgroundColor = series.color;
+                row.appendChild(marker);
+                const dailyGrowth = formatSignedTrendValue(series.value);
+                let valueText = `${abbreviateTrendPluginName(series.name)}: 日增 ${dailyGrowth}`;
+                if (trendState.mode === 'hourly') {
+                    const previousValue = index > 0 ? series.values[index - 1] : null;
+                    const intervalGrowth = Number.isFinite(previousValue)
+                        ? formatSignedTrendValue(series.value - previousValue)
+                        : '—';
+                    valueText += ` · 较上次 ${intervalGrowth}`;
+                }
+                row.appendChild(document.createTextNode(valueText));
+                tooltip.appendChild(row);
+            });
+
+            tooltip.style.display = 'block';
+            const left = Math.min(rect.width - tooltip.offsetWidth - 4, event.clientX - rect.left + 12);
+            const top = Math.max(4, event.clientY - rect.top - tooltip.offsetHeight - 8);
+            tooltip.style.left = `${Math.max(4, left)}px`;
+            tooltip.style.top = `${top}px`;
+        }
+
+        function hideTrendTooltip() {
+            document.getElementById('trend-tooltip').style.display = 'none';
+        }
+
+        function formatSignedTrendValue(value) {
+            if (!Number.isFinite(value)) return '—';
+            if (value > 0) return `+${value.toLocaleString('zh-CN')}`;
+            if (value < 0) return value.toLocaleString('zh-CN');
+            return '±0';
+        }
+
+        function abbreviateTrendPluginName(name) {
+            const characters = Array.from(String(name || ''));
+            return characters.length > 15
+                ? `${characters.slice(0, 15).join('')}…`
+                : characters.join('');
         }
 
         async function getData(year, month, day, time) {
             try {
-                const response = await fetch(`/get-data?year=${year}&month=${month}&day=${day}&time=${time}`);
+                const response = await fetch(`${PLUGIN_DATA_API}/get-data?year=${year}&month=${month}&day=${day}&time=${time}`);
                 const data = await response.json();
                 // console.log('Data received for ', year, month, day, time, ':', data);
                 displayData(data);  // 展示数据
@@ -380,43 +874,9 @@
                 nameSpan.classList.add('ellipsis');
                 nameCell.appendChild(nameSpan)
 
-                const usersCell = document.createElement('td');
-                usersCell.textContent = entry.users;
-                row.appendChild(usersCell);
-
-                const DoDCountCell = document.createElement('td');
-                DoDCountCell.textContent = entry.DoDCount;
-                const DoDCount = parseInt(entry.DoDCount, 10);
-                if (DoDCount >= 100 && DoDCount < 200) {
-                    DoDCountCell.style.color = '#f06010';
-                } else if (DoDCount >= 200) {
-                    DoDCountCell.style.color = '#bb0060';
-                }
-                row.appendChild(DoDCountCell);
-
-                // 添加点赞数
-                const likesCell = document.createElement('td');
-                likesCell.textContent = entry.likes;
-                row.appendChild(likesCell);
-
-                // 添加点赞日增
-                const DoDLikesCell = document.createElement('td');
-                DoDLikesCell.textContent = entry.DoDLikes;
-                const DoDLikes = parseInt(entry.DoDLikes, 10);
-                if (DoDLikes >= 100 && DoDLikes < 200) {
-                    DoDLikesCell.style.color = '#f06010';
-                } else if (DoDLikes >= 200) {
-                    DoDLikesCell.style.color = '#bb0060';
-                }
-                row.appendChild(DoDLikesCell);
-
-                const savesCell = document.createElement('td');
-                savesCell.textContent = Number.isFinite(entry.saves) ? entry.saves : '—';
-                row.appendChild(savesCell);
-
-                const DoDSavesCell = document.createElement('td');
-                DoDSavesCell.textContent = entry.DoDSaves ?? '—';
-                row.appendChild(DoDSavesCell);
+                row.appendChild(createMetricCell(entry.users, entry.DoDCount, 'users'));
+                row.appendChild(createMetricCell(entry.likes, entry.DoDLikes, 'likes'));
+                row.appendChild(createMetricCell(entry.saves, entry.DoDSaves, 'saves'));
 
                 dataBody.appendChild(row);
                 if (HIGHLIGHTED_PLUGIN_IDS.has(String(entry.contentId))) {
@@ -425,6 +885,58 @@
 
             });
         }
+
+        function createMetricCell(value, delta, metric) {
+            const cell = document.createElement('td');
+            cell.classList.add('metric-cell');
+
+            const valueElement = document.createElement('div');
+            valueElement.classList.add('metric-value');
+            valueElement.textContent = formatMetricNumber(value);
+            cell.appendChild(valueElement);
+
+            const deltaElement = document.createElement('div');
+            deltaElement.classList.add('metric-delta');
+            const numericDelta = parseMetricNumber(delta);
+
+            if (numericDelta === null) {
+                deltaElement.textContent = '—';
+            } else if (numericDelta > 0) {
+                deltaElement.textContent = `+${numericDelta.toLocaleString('zh-CN')}`;
+            } else if (numericDelta < 0) {
+                deltaElement.textContent = numericDelta.toLocaleString('zh-CN');
+            } else {
+                deltaElement.textContent = '±0';
+            }
+
+            if (numericDelta !== null && metric === 'users') {
+                if (numericDelta < 50) deltaElement.classList.add('user-low');
+                else if (numericDelta < 100) deltaElement.classList.add('user-medium');
+                else deltaElement.classList.add('user-high');
+            } else if (numericDelta > 0) {
+                deltaElement.classList.add('positive');
+            } else if (numericDelta < 0) {
+                deltaElement.classList.add('negative');
+            }
+
+            cell.appendChild(deltaElement);
+            return cell;
+        }
+
+        function formatMetricNumber(value) {
+            const numericValue = parseMetricNumber(value);
+            return numericValue === null ? '—' : numericValue.toLocaleString('zh-CN');
+        }
+
+        function parseMetricNumber(value) {
+            if (value === null || value === undefined || value === '' || value === '—' || value === '--') {
+                return null;
+            }
+
+            const numericValue = Number(String(value).replace(/,/g, ''));
+            return Number.isFinite(numericValue) ? numericValue : null;
+        }
+
         function deleteCurrentEntry(year, month, day, time) {
             if (!confirm('确定删除这组采集数据?')) {
                 return; // 用户取消操作
@@ -442,7 +954,7 @@
 
         function removeData(year, month, day, time, callback) {
             // console.log(year, month, day, time);
-            fetch(`/delete-time-data?year=${year}&month=${month}&day=${day}&time=${time}`, {
+            fetch(`${PLUGIN_DATA_API}/delete-time-data?year=${year}&month=${month}&day=${day}&time=${time}`, {
                 method: 'DELETE'
             })
                 .then(response => response.json())

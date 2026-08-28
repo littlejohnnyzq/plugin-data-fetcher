@@ -3,14 +3,19 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const { mountAnalyticsRelay } = require('./analytics-relay');
+const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
+const {
+    getDailyTrends,
+    getHourlyTrends,
+    updateDailyTrendSnapshot
+} = require('./plugin-trends');
 const {
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
     collectSaveCounts,
     extractSaveCount,
-    fetchSaveCountFromFigStats,
     loadSaveCache,
     loadWatchlist,
     REALTIME_SAVE_CONTENT_IDS,
@@ -18,7 +23,12 @@ const {
     storeWatchlist
 } = require('./save-tracker');
 const app = express();
+app.set('trust proxy', 1);
 const port = 1086;
+const DATA_DIRECTORY = path.join(__dirname, 'data');
+const DAILY_TRENDS_PATH = path.join(__dirname, 'state', 'plugin-daily-trends.json');
+const PUBLIC_DIRECTORY = path.join(__dirname, 'public');
+const PRODUCT_BASE_PATH = '/product/plugin-data';
 const FIXED_PLUGINS = [
     {
         contentId: '1370606842652257742',
@@ -145,8 +155,61 @@ app.use((req, res, next) => {
 // 解析 JSON 请求体
 app.use('/api/plugin-events', express.json({ limit: '16kb' }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false, limit: '4kb' }));
 const analyticsRelay = mountAnalyticsRelay(app);
-app.use(express.static('public'));
+const dashboardAuth = createDashboardAuth();
+
+app.get('/', (req, res) => {
+    return res.redirect(302, `${PRODUCT_BASE_PATH}/`);
+});
+
+app.get(PRODUCT_BASE_PATH, (req, res) => {
+    if (!req.path.endsWith('/')) {
+        return res.redirect(301, `${PRODUCT_BASE_PATH}/`);
+    }
+    if (dashboardAuth.isAuthenticated(req)) {
+        return res.redirect(302, `${PRODUCT_BASE_PATH}/dashboard/`);
+    }
+    return res.sendFile(path.join(PUBLIC_DIRECTORY, 'landing.html'));
+});
+
+app.post(`${PRODUCT_BASE_PATH}/enter`, (req, res) => {
+    const clientKey = req.ip || req.socket.remoteAddress || 'unknown';
+    const attempt = dashboardAuth.canAttempt(clientKey);
+
+    if (!attempt.allowed) {
+        res.set('Retry-After', String(attempt.retryAfterSeconds));
+        return res.redirect(303, `${PRODUCT_BASE_PATH}/?error=limited`);
+    }
+    if (!dashboardAuth.isConfigured()) {
+        return res.redirect(303, `${PRODUCT_BASE_PATH}/?error=unconfigured`);
+    }
+    if (!dashboardAuth.authenticate(req.body.password)) {
+        dashboardAuth.recordFailure(clientKey);
+        return res.redirect(303, `${PRODUCT_BASE_PATH}/?error=invalid`);
+    }
+
+    dashboardAuth.clearFailures(clientKey);
+    dashboardAuth.issueCookie(req, res);
+    return res.redirect(303, `${PRODUCT_BASE_PATH}/dashboard/`);
+});
+
+app.post(`${PRODUCT_BASE_PATH}/logout`, (req, res) => {
+    dashboardAuth.clearCookie(req, res);
+    return res.redirect(303, `${PRODUCT_BASE_PATH}/`);
+});
+
+app.get(`${PRODUCT_BASE_PATH}/dashboard`, dashboardAuth.requireAuth, (req, res) => {
+    if (req.path.endsWith('/')) {
+        return res.sendFile(path.join(PUBLIC_DIRECTORY, 'index.html'));
+    }
+    return res.redirect(301, `${PRODUCT_BASE_PATH}/dashboard/`);
+});
+
+// All collector pages and legacy/internal endpoints below this point require login.
+// The plugin-events relay and its health check are mounted above and remain public.
+app.use(dashboardAuth.requireAuth);
+app.use(express.static(PUBLIC_DIRECTORY, { index: false }));
 
 // 添加调试日志中间件
 app.use((req, res, next) => {
@@ -172,6 +235,7 @@ function storeData(data, currentTime) {
 
         const filePath = path.join(dirPath, `${time}.json`);
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        updateDailyTrendSnapshot(DAILY_TRENDS_PATH, data, currentTime, REALTIME_SAVE_CONTENT_IDS);
         console.log('Data stored successfully:', filePath);
     } catch (error) {
         console.error('Failed to store data:', error);
@@ -195,6 +259,13 @@ function storeDataAsEndOfDay(pluginData, previousDayTime) {
 
     // 写入数据到文件
     fs.writeFileSync(filePath, JSON.stringify(pluginData, null, 2));
+    updateDailyTrendSnapshot(
+        DAILY_TRENDS_PATH,
+        pluginData,
+        previousDayTime,
+        REALTIME_SAVE_CONTENT_IDS,
+        { day: formatLocalDate(previousDayTime) }
+    );
 }
 
 function findPreviousData(currentTime) {
@@ -264,19 +335,23 @@ function findLatestSuccessfulSaveData(currentTime) {
     return latestById.size > 0 ? [...latestById.values()] : null;
 }
 
-app.listen(1086, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Dashboard password protection: ${dashboardAuth.isConfigured() ? 'enabled' : 'NOT CONFIGURED'}`);
     console.log('Available endpoints:');
+    console.log(`- GET ${PRODUCT_BASE_PATH}/ (landing)`);
+    console.log(`- GET ${PRODUCT_BASE_PATH}/dashboard/ (password protected)`);
     console.log('- GET /fetch-plugin-data');
     console.log('- GET /get-data');
     console.log('- GET /get-directory');
     console.log('- GET /get-save-watchlist');
+    console.log('- GET /plugin-trends');
     console.log('- POST /api/plugin-events');
     console.log('- GET /analytics-healthz');
 });
 
 function startFetchTask() {
-    scheduleAlignedTask(fetchData, {
+    scheduleAlignedTask(boundaryTimeMs => fetchData(new Date(boundaryTimeMs)), {
         onError: error => console.error('Error during scheduled fetch:', error)
     });
 }
@@ -292,17 +367,15 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
     });
 }
 
-async function fetchData() {
+async function fetchData(collectionTime = new Date()) {
     try {
-        const now = new Date();
+        const now = collectionTime;
         const isMidnight = now.getHours() === 0 && now.getMinutes() === 0;
         const realtimePrefetch = await prefetchRealtimeSaveCounts(now);
         const lastSaveData = loadSaveCache() ?? findLatestSuccessfulSaveData(now);
         const saveOptions = {
-            collectDailySaves: isMidnight || !lastSaveData,
             lastSaveData,
             fetchRealtimeSaveCount: realtimePrefetch.fetchSaveCount,
-            fetchRealtimeFallbackSaveCount: fetchSaveCountFromFigStats,
             realtimeContentIds: realtimePrefetch.contentIds,
             realtimeDelayMs: 0,
             realtimeDelayJitterMs: 0,
@@ -330,7 +403,7 @@ async function fetchData() {
         }
     } catch (error) {
         console.error('Error during fetchData:', error);
-        // 这里你可以添加更多错误处理逻辑，比如记录错误到日志文件等
+        throw error;
     }
 }
 
@@ -348,7 +421,7 @@ function readDataByDateTime(year, month, day, time) {
     }
 }
 
-app.get('/fetch-plugin-data', async (req, res) => {
+app.get(['/fetch-plugin-data', '/api/plugin-data/fetch-plugin-data'], async (req, res) => {
     console.log('Received request to fetch plugin data');
     try {
         await fetchData();
@@ -526,11 +599,8 @@ async function fetchPluginData(previousData, options = {}) {
             }
 
             await collectSaveCounts(allPlugins, watchlist, previousData, {
-                concurrency: 4,
-                collectDailySaves: options.collectDailySaves,
                 lastSaveData: options.lastSaveData,
                 fetchRealtimeSaveCount: options.fetchRealtimeSaveCount,
-                fetchRealtimeFallbackSaveCount: options.fetchRealtimeFallbackSaveCount,
                 realtimeContentIds: options.realtimeContentIds,
                 realtimeDelayMs: options.realtimeDelayMs,
                 realtimeDelayJitterMs: options.realtimeDelayJitterMs,
@@ -589,7 +659,7 @@ function constructDirectory() {
     return directory;
 }
 
-app.get('/get-data', async (req, res) => {
+app.get(['/get-data', '/api/plugin-data/get-data'], async (req, res) => {
     const { year, month, day, time } = req.query;
     try {
         const data = readDataByDateTime(year, month, day, time);
@@ -600,7 +670,7 @@ app.get('/get-data', async (req, res) => {
     }
 });
 
-app.get('/get-directory', (req, res) => {
+app.get(['/get-directory', '/api/plugin-data/get-directory'], (req, res) => {
     try {
         const directory = constructDirectory();
         res.json(directory);
@@ -610,12 +680,49 @@ app.get('/get-directory', (req, res) => {
     }
 });
 
-app.get('/get-save-watchlist', (req, res) => {
+app.get(['/get-save-watchlist', '/api/plugin-data/get-save-watchlist'], (req, res) => {
     const watchlist = loadWatchlist();
     if (!watchlist) {
         return res.status(404).json({ error: 'Save watchlist has not been created yet' });
     }
     res.json(watchlist);
+});
+
+app.get(['/plugin-trends', '/api/plugin-data/plugin-trends'], (req, res) => {
+    try {
+        const metric = String(req.query.metric || 'saves');
+        const mode = String(req.query.mode || 'hourly');
+
+        if (!['users', 'likes', 'saves'].includes(metric)) {
+            return res.status(400).json({ error: 'metric must be users, likes or saves' });
+        }
+
+        if (mode === 'hourly') {
+            const day = String(req.query.day || formatLocalDate(new Date()));
+            const trends = getHourlyTrends(DATA_DIRECTORY, day, metric, REALTIME_SAVE_CONTENT_IDS);
+            return res.json({ metric, mode, day, ...trends });
+        }
+
+        if (mode === 'daily') {
+            const requestedDays = parseInt(req.query.days || '30', 10);
+            const days = Number.isFinite(requestedDays)
+                ? Math.max(1, Math.min(365, requestedDays))
+                : 30;
+            const trends = getDailyTrends(
+                DAILY_TRENDS_PATH,
+                DATA_DIRECTORY,
+                days,
+                metric,
+                REALTIME_SAVE_CONTENT_IDS
+            );
+            return res.json({ metric, mode, days, ...trends });
+        }
+
+        return res.status(400).json({ error: 'mode must be hourly or daily' });
+    } catch (error) {
+        console.error('Failed to load plugin trends:', error);
+        res.status(500).json({ error: 'Failed to load plugin trends' });
+    }
 });
 
 function deleteTimeData(year, month, day, time) {
@@ -658,7 +765,7 @@ function deleteTimeData(year, month, day, time) {
     return false;
 }
 
-app.delete('/delete-time-data', (req, res) => {
+app.delete(['/delete-time-data', '/api/plugin-data/delete-time-data'], (req, res) => {
     const { year, month, day, time } = req.query;
     console.log(`Received request to delete data for ${year}/${month}/${day} ${time}`);
     

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plugin Data - Figma 社区插件数据采集与趋势分析">
+    <title>Plugin Data</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --text: #17191d;
+            --muted: #70757f;
+            --line: #e1e5eb;
+            --blue: #236de3;
+            --blue-dark: #1859be;
+            --danger: #c5221f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(circle at 16% 12%, #dce9ff 0, transparent 34%),
+                radial-gradient(circle at 88% 18%, #eee7ff 0, transparent 30%),
+                #f7f8fa;
+            color: var(--text);
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+            align-items: center;
+            gap: 72px;
+            width: min(1040px, calc(100% - 40px));
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 64px 0;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 28px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .mark {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            background: var(--text);
+            box-shadow: inset 6px 0 var(--blue);
+        }
+
+        h1 {
+            max-width: 660px;
+            margin: 0;
+            font-size: clamp(44px, 7vw, 74px);
+            line-height: 1;
+            letter-spacing: -0.055em;
+        }
+
+        .intro {
+            max-width: 600px;
+            margin: 24px 0 34px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.75;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .features li {
+            padding: 7px 11px;
+            border: 1px solid rgba(35, 109, 227, 0.16);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.56);
+            color: #42536d;
+            font-size: 12px;
+        }
+
+        .access-card {
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 22px 60px rgba(23, 25, 29, 0.09);
+            backdrop-filter: blur(12px);
+        }
+
+        .access-card h2 {
+            margin: 0 0 8px;
+            font-size: 22px;
+            letter-spacing: -0.025em;
+        }
+
+        .access-card p {
+            margin: 0 0 24px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 0 13px;
+            border: 1px solid #ccd2db;
+            border-radius: 9px;
+            background: #fff;
+            font: inherit;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(35, 109, 227, 0.12);
+        }
+
+        button {
+            width: 100%;
+            height: 44px;
+            margin-top: 12px;
+            border: 0;
+            border-radius: 9px;
+            background: var(--blue);
+            color: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--blue-dark);
+        }
+
+        .error {
+            display: none;
+            margin: 14px 0 0;
+            color: var(--danger);
+            font-size: 12px;
+        }
+
+        .error.visible {
+            display: block;
+        }
+
+        @media (max-width: 760px) {
+            main {
+                grid-template-columns: 1fr;
+                align-content: center;
+                gap: 42px;
+                width: min(100% - 28px, 560px);
+                padding: 40px 0;
+            }
+
+            h1 {
+                font-size: clamp(42px, 14vw, 64px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <section>
+            <div class="eyebrow"><span class="mark" aria-hidden="true"></span>Plugin Data</div>
+            <h1>Figma plugin metrics, in one place.</h1>
+            <p class="intro">持续采集 Figma 社区插件的用户、点赞与保存数据，查看分时变化和长期趋势。</p>
+            <ul class="features" aria-label="功能">
+                <li>半小时采集</li>
+                <li>日增趋势</li>
+                <li>重点插件关注</li>
+                <li>Save 数据追踪</li>
+            </ul>
+        </section>
+
+        <section class="access-card" aria-labelledby="access-title">
+            <h2 id="access-title">访问数据后台</h2>
+            <p>这是受保护的内部工具，请输入访问密码继续。</p>
+            <form action="/product/plugin-data/enter" method="post">
+                <label for="password">访问密码</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+                <button type="submit">进入采集后台</button>
+                <div id="login-error" class="error" role="alert"></div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const error = new URLSearchParams(location.search).get('error');
+        const messages = {
+            invalid: '密码不正确，请重新输入。',
+            auth: '登录状态已失效，请重新验证。',
+            limited: '尝试次数过多，请稍后再试。',
+            unconfigured: '服务器尚未配置访问密码。'
+        };
+        if (messages[error]) {
+            const errorElement = document.getElementById('login-error');
+            errorElement.textContent = messages[error];
+            errorElement.classList.add('visible');
+        }
+    </script>
+</body>
+
+</html>

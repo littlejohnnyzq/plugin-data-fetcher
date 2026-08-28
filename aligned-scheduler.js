@@ -19,12 +19,22 @@ function scheduleAlignedTask(task, options = {}) {
             return;
         }
 
-        const delay = millisecondsUntilNextBoundary(now(), intervalMs);
-        timer = setTimer(runTask, delay);
+        const currentTimeMs = now();
+        const delay = millisecondsUntilNextBoundary(currentTimeMs, intervalMs);
+        const boundaryTimeMs = currentTimeMs + delay;
+        timer = setTimer(() => runTask(boundaryTimeMs), delay);
     }
 
-    function runTask() {
+    function runTask(boundaryTimeMs) {
         if (stopped) {
+            return;
+        }
+
+        // A timer can occasionally wake just before the wall-clock boundary.
+        // Wait out the remaining milliseconds instead of scheduling a second run.
+        const remainingMs = boundaryTimeMs - now();
+        if (remainingMs > 0) {
+            timer = setTimer(() => runTask(boundaryTimeMs), remainingMs);
             return;
         }
 
@@ -32,7 +42,7 @@ function scheduleAlignedTask(task, options = {}) {
         // never shifts the following :00/:30 run.
         scheduleNext();
         Promise.resolve()
-            .then(task)
+            .then(() => task(boundaryTimeMs))
             .catch(onError);
     }
 
