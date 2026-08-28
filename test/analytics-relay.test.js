@@ -13,6 +13,7 @@ const {
 
 const HMAC_SECRET = 'test-only-secret-with-more-than-32-characters';
 const PLUGIN_ID = '1370606842652257742';
+const SECOND_PLUGIN_ID = '9876543210123456789';
 
 function createTempDatabase(t) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'plugin-analytics-'));
@@ -42,7 +43,7 @@ function createTestRelay(t, forwarded) {
         hmacSecret: HMAC_SECRET,
         measurementId: 'G-TEST',
         apiSecret: 'test-secret',
-        allowedPluginIds: new Set([PLUGIN_ID]),
+        allowedPluginIds: new Set([PLUGIN_ID, SECOND_PLUGIN_ID]),
         allowedEventNames: new Set(['plugin_launch', 'generate_chart']),
         axiosClient: {
             async post(url, payload) {
@@ -98,6 +99,9 @@ test('only launch events increment the stored launch counter', t => {
     t.after(() => store.close());
     const launchEvent = {
         eventName: 'plugin_launch',
+        pluginId: PLUGIN_ID,
+        pluginName: 'iCharts',
+        pluginVersion: '1.0.0',
         userId: 'figma-user-counter',
         userName: 'Counter User'
     };
@@ -109,6 +113,74 @@ test('only launch events increment the stored launch counter', t => {
     assert.equal(first.launch_count, 1);
     assert.equal(second.launch_count, 2);
     assert.equal(second.client_id, first.client_id);
+});
+
+test('one Figma identity is shared while launch counts stay separate per plugin', t => {
+    const databasePath = createTempDatabase(t);
+    const store = createUserStore(databasePath, HMAC_SECRET);
+    t.after(() => store.close());
+    const baseEvent = {
+        eventName: 'plugin_launch',
+        pluginId: PLUGIN_ID,
+        pluginName: 'iCharts',
+        pluginVersion: '1.0.0',
+        userId: 'figma-user-cross-plugin',
+        userName: 'Cross Plugin User'
+    };
+
+    const first = store.resolve(baseEvent, 1700000000000);
+    const second = store.resolve({
+        ...baseEvent,
+        pluginId: SECOND_PLUGIN_ID,
+        pluginName: 'Another Plugin',
+        pluginVersion: '2.0.0'
+    }, 1700000010000);
+    store.resolve({ ...baseEvent, pluginVersion: '1.1.0' }, 1700000020000);
+
+    assert.equal(first.client_id, second.client_id);
+    assert.equal(store.getUserPlugin(baseEvent.userId, PLUGIN_ID).launch_count, 2);
+    assert.equal(store.getUserPlugin(baseEvent.userId, SECOND_PLUGIN_ID).launch_count, 1);
+    assert.equal(store.getUserPlugin(baseEvent.userId, PLUGIN_ID).latest_version, '1.1.0');
+    assert.equal(store.getPlugin(PLUGIN_ID).plugin_name, 'iCharts');
+    assert.equal(store.getPlugin(SECOND_PLUGIN_ID).plugin_name, 'Another Plugin');
+});
+
+test('an existing single-plugin database upgrades without losing user identity', t => {
+    const databasePath = createTempDatabase(t);
+    const Database = require('better-sqlite3');
+    const legacyDatabase = new Database(databasePath);
+    legacyDatabase.exec(`
+        CREATE TABLE analytics_users (
+            user_id_hash TEXT PRIMARY KEY,
+            client_id TEXT NOT NULL UNIQUE,
+            user_name TEXT NOT NULL DEFAULT '',
+            launch_count INTEGER NOT NULL DEFAULT 0 CHECK (launch_count >= 0),
+            created_at INTEGER NOT NULL,
+            last_seen_at INTEGER NOT NULL
+        ) STRICT
+    `);
+    const userIdHash = hashUserId('figma-user-existing', HMAC_SECRET);
+    legacyDatabase.prepare(`
+        INSERT INTO analytics_users
+            (user_id_hash, client_id, user_name, launch_count, created_at, last_seen_at)
+        VALUES (?, 'existing-client.1700000000', 'Existing User', 3, 1, 1)
+    `).run(userIdHash);
+    legacyDatabase.close();
+
+    const store = createUserStore(databasePath, HMAC_SECRET);
+    t.after(() => store.close());
+    const resolved = store.resolve({
+        eventName: 'plugin_launch',
+        pluginId: PLUGIN_ID,
+        pluginName: 'iCharts',
+        pluginVersion: '1.0.0',
+        userId: 'figma-user-existing',
+        userName: 'Existing User'
+    }, 1700000030000);
+
+    assert.equal(resolved.client_id, 'existing-client.1700000000');
+    assert.equal(resolved.launch_count, 4);
+    assert.equal(store.getUserPlugin('figma-user-existing', PLUGIN_ID).launch_count, 1);
 });
 
 test('feature event reuses mapping and is forwarded without user name', async t => {

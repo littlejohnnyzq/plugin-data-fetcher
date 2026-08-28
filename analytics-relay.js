@@ -99,6 +99,7 @@ function createUserStore(databasePath, hmacSecret) {
     database.pragma('journal_mode = WAL');
     database.pragma('synchronous = NORMAL');
     database.pragma('busy_timeout = 5000');
+    database.pragma('foreign_keys = ON');
     database.exec(`
         CREATE TABLE IF NOT EXISTS analytics_users (
             user_id_hash TEXT PRIMARY KEY,
@@ -107,7 +108,30 @@ function createUserStore(databasePath, hmacSecret) {
             launch_count INTEGER NOT NULL DEFAULT 0 CHECK (launch_count >= 0),
             created_at INTEGER NOT NULL,
             last_seen_at INTEGER NOT NULL
-        ) STRICT
+        ) STRICT;
+
+        CREATE TABLE IF NOT EXISTS analytics_plugins (
+            plugin_id TEXT PRIMARY KEY,
+            plugin_name TEXT NOT NULL DEFAULT '',
+            latest_version TEXT NOT NULL DEFAULT '',
+            first_seen_at INTEGER NOT NULL,
+            last_seen_at INTEGER NOT NULL
+        ) STRICT;
+
+        CREATE TABLE IF NOT EXISTS analytics_user_plugins (
+            user_id_hash TEXT NOT NULL,
+            plugin_id TEXT NOT NULL,
+            launch_count INTEGER NOT NULL DEFAULT 0 CHECK (launch_count >= 0),
+            latest_version TEXT NOT NULL DEFAULT '',
+            first_seen_at INTEGER NOT NULL,
+            last_seen_at INTEGER NOT NULL,
+            PRIMARY KEY (user_id_hash, plugin_id),
+            FOREIGN KEY (user_id_hash) REFERENCES analytics_users(user_id_hash),
+            FOREIGN KEY (plugin_id) REFERENCES analytics_plugins(plugin_id)
+        ) STRICT;
+
+        CREATE INDEX IF NOT EXISTS analytics_user_plugins_plugin_index
+            ON analytics_user_plugins(plugin_id, last_seen_at)
     `);
 
     const findUser = database.prepare(`
@@ -127,8 +151,43 @@ function createUserStore(databasePath, hmacSecret) {
     const updateName = database.prepare(`
         UPDATE analytics_users SET user_name = ? WHERE user_id_hash = ?
     `);
+    const upsertPlugin = database.prepare(`
+        INSERT INTO analytics_plugins
+            (plugin_id, plugin_name, latest_version, first_seen_at, last_seen_at)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(plugin_id) DO UPDATE SET
+            plugin_name = CASE
+                WHEN excluded.plugin_name <> '' THEN excluded.plugin_name
+                ELSE analytics_plugins.plugin_name
+            END,
+            latest_version = CASE
+                WHEN excluded.latest_version <> '' THEN excluded.latest_version
+                ELSE analytics_plugins.latest_version
+            END,
+            last_seen_at = excluded.last_seen_at
+    `);
+    const upsertUserPlugin = database.prepare(`
+        INSERT INTO analytics_user_plugins
+            (user_id_hash, plugin_id, launch_count, latest_version, first_seen_at, last_seen_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id_hash, plugin_id) DO UPDATE SET
+            launch_count = analytics_user_plugins.launch_count + excluded.launch_count,
+            latest_version = CASE
+                WHEN excluded.latest_version <> '' THEN excluded.latest_version
+                ELSE analytics_user_plugins.latest_version
+            END,
+            last_seen_at = excluded.last_seen_at
+    `);
+    const findPlugin = database.prepare(`
+        SELECT plugin_id, plugin_name, latest_version, first_seen_at, last_seen_at
+        FROM analytics_plugins WHERE plugin_id = ?
+    `);
+    const findUserPlugin = database.prepare(`
+        SELECT user_id_hash, plugin_id, launch_count, latest_version, first_seen_at, last_seen_at
+        FROM analytics_user_plugins WHERE user_id_hash = ? AND plugin_id = ?
+    `);
 
-    function resolve(event, nowMs = Date.now()) {
+    const resolveTransaction = database.transaction((event, nowMs) => {
         const userIdHash = hashUserId(event.userId, hmacSecret);
         let user = findUser.get(userIdHash);
         for (let attempt = 0; !user && attempt < 4; attempt += 1) {
@@ -142,11 +201,37 @@ function createUserStore(databasePath, hmacSecret) {
         } else if (event.userName !== user.user_name) {
             updateName.run(event.userName, userIdHash);
         }
+
+        upsertPlugin.run(
+            event.pluginId,
+            event.pluginName || '',
+            event.pluginVersion || '',
+            nowMs,
+            nowMs
+        );
+        upsertUserPlugin.run(
+            userIdHash,
+            event.pluginId,
+            event.eventName === 'plugin_launch' ? 1 : 0,
+            event.pluginVersion || '',
+            nowMs,
+            nowMs
+        );
         return findUser.get(userIdHash);
+    });
+
+    function resolve(event, nowMs = Date.now()) {
+        if (!event.pluginId) throw new Error('pluginId is required to resolve analytics identity');
+        return resolveTransaction(event, nowMs);
     }
 
     return {
         resolve,
+        getPlugin: pluginId => findPlugin.get(pluginId),
+        getUserPlugin: (userId, pluginId) => findUserPlugin.get(
+            hashUserId(userId, hmacSecret),
+            pluginId
+        ),
         healthCheck: () => database.prepare('SELECT 1 AS ok').get().ok === 1,
         close: () => database.close()
     };

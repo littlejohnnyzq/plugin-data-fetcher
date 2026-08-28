@@ -1,18 +1,19 @@
 # Plugin analytics relay
 
-The existing Express server exposes `POST /api/plugin-events` for Figma
-plugins. It stores one SQLite identity row per Figma user and forwards raw
-events to GA4 without retaining event history.
+The existing Express server exposes `POST /api/plugin-events` for multiple
+Figma plugins. It stores one shared SQLite identity row per Figma user and
+forwards raw events to GA4 without retaining event history. The same Figma
+user therefore keeps one GA4 `client_id` across every plugin product.
 
 ## Data stored locally
 
 `state/analytics-users.sqlite` contains:
 
-- HMAC-SHA256 Figma user ID
-- stable GA4 `client_id`
-- optional current display name
-- cumulative plugin launch count
-- first and latest observed launch timestamps
+- `analytics_users`: HMAC-SHA256 Figma user ID, stable GA4 `client_id`, current
+  display name, total launch count and observed timestamps
+- `analytics_plugins`: plugin ID, current name/version and observed timestamps
+- `analytics_user_plugins`: per-user/per-plugin launch count, current version
+  and observed timestamps
 
 The raw Figma user ID and raw event payloads are never stored.
 
@@ -57,4 +58,14 @@ ALLOWED_EVENT_NAMES=plugin_launch,generate_bar_chart,generate_line_chart
 ```
 
 All events reuse the same user-to-client-ID mapping. Only `plugin_launch`
-increments the launch counter.
+increments the global and per-plugin launch counters. Add every product to the
+allowlist while keeping all of them on the same relay and HMAC secret:
+
+```env
+ALLOWED_PLUGIN_IDS=1370606842652257742,another_figma_plugin_id
+```
+
+In GA4, register `plugin_id`, `plugin_name` and `plugin_version` as event-scoped
+custom dimensions so reports and retention explorations can be filtered or
+compared by plugin product. Do not create a separate GA4 `client_id` namespace
+per plugin.
