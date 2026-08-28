@@ -23,10 +23,17 @@
             margin-bottom: 8px;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
         .logout-form {
             margin: 0;
         }
 
+        .header-link,
         .logout-button {
             padding: 0;
             border: 0;
@@ -38,6 +45,7 @@
             cursor: pointer;
         }
 
+        .header-link:hover,
         .logout-button:hover {
             text-decoration: underline;
         }
@@ -305,9 +313,12 @@
 <body>
     <header class="page-header">
         <h2>插件数据采集</h2>
-        <form class="logout-form" action="/product/plugin-data/logout" method="post">
-            <button class="logout-button" type="submit">退出后台</button>
-        </form>
+        <div class="header-actions">
+            <a class="header-link" href="/product/plugin-data/users/">用户表</a>
+            <form class="logout-form" action="/product/plugin-data/logout" method="post">
+                <button class="logout-button" type="submit">退出后台</button>
+            </form>
+        </div>
     </header>
     <!-- <div class="top-bar">
         <label for="interval">自动采集间隔(分钟):</label>

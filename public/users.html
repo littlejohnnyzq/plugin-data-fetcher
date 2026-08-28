@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>插件用户表</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 12px;
+            color: #222;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        h2 { margin: 0; }
+        .page-header,
+        .header-actions,
+        .toolbar,
+        .pagination {
+            display: flex;
+            align-items: center;
+        }
+        .page-header {
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .header-actions { gap: 14px; }
+        .header-link,
+        .logout-button {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #236de3;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .header-link:hover,
+        .logout-button:hover { text-decoration: underline; }
+        .logout-form { margin: 0; }
+        .toolbar {
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .search-group { display: flex; gap: 6px; }
+        .toolbar-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input {
+            width: min(360px, 62vw);
+            padding: 7px 9px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font: inherit;
+        }
+        select {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            color: #222;
+            font: inherit;
+        }
+        button.action-button {
+            padding: 7px 12px;
+            border: 1px solid #c8c8c8;
+            border-radius: 5px;
+            background: #fff;
+            color: #222;
+            font: inherit;
+            cursor: pointer;
+        }
+        button.action-button:hover:not(:disabled) { background: #f3f5f7; }
+        button.action-button:disabled { cursor: default; opacity: 0.45; }
+        .status { color: #666; }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: collapse;
+        }
+        th,
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e5e5;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f2f4f6;
+            color: #555;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr:hover { background: #fafbfc; }
+        .user-name { min-width: 110px; font-weight: 600; }
+        .anonymous-id {
+            display: block;
+            width: 265px;
+            color: #555;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 11px;
+            line-height: 16px;
+            overflow-wrap: anywhere;
+            user-select: all;
+        }
+        .plugins {
+            display: flex;
+            min-width: 250px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .plugin-chip {
+            padding: 3px 7px;
+            border: 1px solid #d9e4f7;
+            border-radius: 10px;
+            background: #f3f7ff;
+            color: #274c86;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .number,
+        .date { white-space: nowrap; }
+        .empty {
+            padding: 32px 12px;
+            color: #777;
+            text-align: center;
+        }
+        .pagination {
+            justify-content: flex-end;
+            gap: 9px;
+            margin-top: 9px;
+        }
+        @media (max-width: 640px) {
+            .page-header { align-items: flex-start; }
+            .toolbar { align-items: flex-start; flex-direction: column; }
+            .search-group { width: 100%; }
+            input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h2>插件用户表</h2>
+        <div class="header-actions">
+            <a class="header-link" href="/product/plugin-data/dashboard/">返回采集数据</a>
+            <form class="logout-form" action="/product/plugin-data/logout" method="post">
+                <button class="logout-button" type="submit">退出后台</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <div class="search-group">
+            <input id="user-search" type="search" placeholder="搜索用户名称或匿名 ID" autocomplete="off">
+            <button id="search-button" class="action-button" type="button">搜索</button>
+        </div>
+        <div class="toolbar-meta">
+            <label>排序：
+                <select id="user-sort">
+                    <option value="recent">最近使用时间</option>
+                    <option value="launches">启动次数</option>
+                </select>
+            </label>
+            <span id="user-status" class="status">加载中…</span>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>匿名 ID</th>
+                    <th>使用插件</th>
+                    <th>总启动</th>
+                    <th>首次使用</th>
+                    <th>最近使用</th>
+                </tr>
+            </thead>
+            <tbody id="user-body"></tbody>
+        </table>
+        <div id="empty-state" class="empty" hidden>暂无用户数据</div>
+    </div>
+
+    <div class="pagination">
+        <button id="previous-page" class="action-button" type="button">上一页</button>
+        <span id="page-status">第 1 页</span>
+        <button id="next-page" class="action-button" type="button">下一页</button>
+    </div>
+
+    <script>
+        const PAGE_SIZE = 50;
+        let currentPage = 1;
+        let totalUsers = 0;
+
+        document.getElementById('search-button').addEventListener('click', () => {
+            currentPage = 1;
+            loadUsers();
+        });
+        document.getElementById('user-search').addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                currentPage = 1;
+                loadUsers();
+            }
+        });
+        document.getElementById('user-sort').addEventListener('change', () => {
+            currentPage = 1;
+            loadUsers();
+        });
+        document.getElementById('previous-page').addEventListener('click', () => {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            loadUsers();
+        });
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage * PAGE_SIZE >= totalUsers) return;
+            currentPage += 1;
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            const status = document.getElementById('user-status');
+            const params = new URLSearchParams({
+                page: String(currentPage),
+                limit: String(PAGE_SIZE),
+                q: document.getElementById('user-search').value.trim(),
+                sort: document.getElementById('user-sort').value
+            });
+            status.textContent = '加载中…';
+            try {
+                const response = await fetch(`/api/plugin-data/analytics-users?${params}`);
+                if (!response.ok) throw new Error(`用户数据请求失败（${response.status}）`);
+                const result = await response.json();
+                totalUsers = result.total;
+                renderUsers(result.users);
+                updatePagination();
+                status.textContent = `共 ${totalUsers.toLocaleString('zh-CN')} 位用户`;
+            } catch (error) {
+                renderUsers([]);
+                status.textContent = '加载失败';
+                document.getElementById('empty-state').textContent = error.message;
+                document.getElementById('empty-state').hidden = false;
+            }
+        }
+
+        function renderUsers(users) {
+            const body = document.getElementById('user-body');
+            const empty = document.getElementById('empty-state');
+            body.innerHTML = '';
+            empty.textContent = '暂无用户数据';
+            empty.hidden = users.length > 0;
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.appendChild(createTextCell(user.name || '未命名', 'user-name'));
+
+                const idCell = document.createElement('td');
+                const id = document.createElement('code');
+                id.className = 'anonymous-id';
+                id.textContent = user.id;
+                id.title = 'HMAC 匿名用户 ID';
+                idCell.appendChild(id);
+                row.appendChild(idCell);
+
+                const pluginsCell = document.createElement('td');
+                const plugins = document.createElement('div');
+                plugins.className = 'plugins';
+                user.plugins.forEach(plugin => {
+                    const chip = document.createElement('span');
+                    chip.className = 'plugin-chip';
+                    chip.textContent = `${plugin.name || plugin.id} ×${plugin.launchCount}`;
+                    chip.title = `ID: ${plugin.id}${plugin.latestVersion ? ` · 版本: ${plugin.latestVersion}` : ''}`;
+                    plugins.appendChild(chip);
+                });
+                if (user.plugins.length === 0) plugins.textContent = '—';
+                pluginsCell.appendChild(plugins);
+                row.appendChild(pluginsCell);
+
+                row.appendChild(createTextCell(formatNumber(user.launchCount), 'number'));
+                row.appendChild(createTextCell(formatDate(user.createdAt), 'date'));
+                row.appendChild(createTextCell(formatDate(user.lastSeenAt), 'date'));
+                body.appendChild(row);
+            });
+        }
+
+        function createTextCell(value, className) {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            if (className) cell.className = className;
+            return cell;
+        }
+
+        function formatNumber(value) {
+            return Number(value || 0).toLocaleString('zh-CN');
+        }
+
+        function formatDate(value) {
+            if (!Number.isFinite(value)) return '—';
+            return new Date(value).toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            });
+        }
+
+        function updatePagination() {
+            const pageCount = Math.max(1, Math.ceil(totalUsers / PAGE_SIZE));
+            document.getElementById('page-status').textContent = `第 ${currentPage} / ${pageCount} 页`;
+            document.getElementById('previous-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= pageCount;
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

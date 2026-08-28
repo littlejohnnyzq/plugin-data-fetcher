@@ -145,6 +145,50 @@ test('one Figma identity is shared while launch counts stay separate per plugin'
     assert.equal(store.getPlugin(SECOND_PLUGIN_ID).plugin_name, 'Another Plugin');
 });
 
+test('lists users with their plugin relationships using search and pagination', t => {
+    const store = createUserStore(createTempDatabase(t), HMAC_SECRET);
+    t.after(() => store.close());
+    const firstUser = {
+        eventName: 'plugin_launch',
+        pluginId: PLUGIN_ID,
+        pluginName: 'iCharts',
+        pluginVersion: '1.0.0',
+        userId: 'figma-user-list-one',
+        userName: 'Alice'
+    };
+    store.resolve(firstUser, 1700000000000);
+    store.resolve({
+        ...firstUser,
+        pluginId: SECOND_PLUGIN_ID,
+        pluginName: 'Another Plugin',
+        pluginVersion: '2.0.0'
+    }, 1700000010000);
+    store.resolve({
+        ...firstUser,
+        userId: 'figma-user-list-two',
+        userName: 'Bob'
+    }, 1700000020000);
+
+    const firstPage = store.listUsers({ limit: 1, offset: 0 });
+    assert.equal(firstPage.total, 2);
+    assert.equal(firstPage.users.length, 1);
+    assert.equal(firstPage.users[0].name, 'Bob');
+    assert.equal(firstPage.users[0].id, hashUserId('figma-user-list-two', HMAC_SECRET));
+
+    const byLaunchCount = store.listUsers({ sort: 'launches', limit: 1 });
+    assert.equal(byLaunchCount.sort, 'launches');
+    assert.equal(byLaunchCount.users[0].name, 'Alice');
+    assert.equal(byLaunchCount.users[0].launchCount, 2);
+
+    const search = store.listUsers({ query: 'Alice' });
+    assert.equal(search.total, 1);
+    assert.equal(search.users[0].plugins.length, 2);
+    assert.deepEqual(
+        new Set(search.users[0].plugins.map(plugin => plugin.name)),
+        new Set(['iCharts', 'Another Plugin'])
+    );
+});
+
 test('an existing single-plugin database upgrades without losing user identity', t => {
     const databasePath = createTempDatabase(t);
     const Database = require('better-sqlite3');

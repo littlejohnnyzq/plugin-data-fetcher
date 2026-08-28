@@ -209,10 +209,34 @@ app.get(`${PRODUCT_BASE_PATH}/dashboard`, dashboardAuth.requireAuth, (req, res) 
     return res.redirect(301, `${PRODUCT_BASE_PATH}/dashboard/`);
 });
 
+app.get(`${PRODUCT_BASE_PATH}/users`, dashboardAuth.requireAuth, (req, res) => {
+    if (req.path.endsWith('/')) {
+        return res.sendFile(path.join(PUBLIC_DIRECTORY, 'users.html'));
+    }
+    return res.redirect(301, `${PRODUCT_BASE_PATH}/users/`);
+});
+
 // All collector pages and legacy/internal endpoints below this point require login.
 // The plugin-events relay and its health check are mounted above and remain public.
 app.use(dashboardAuth.requireAuth);
 app.use(express.static(PUBLIC_DIRECTORY, { index: false }));
+
+app.get('/api/plugin-data/analytics-users', (req, res) => {
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 200);
+    try {
+        const result = analyticsRelay.listUsers({
+            query: req.query.q,
+            sort: req.query.sort,
+            limit,
+            offset: (page - 1) * limit
+        });
+        return res.json({ ...result, page });
+    } catch (error) {
+        console.error('Unable to list analytics users:', error.message);
+        return res.status(503).json({ error: 'Analytics user data is unavailable' });
+    }
+});
 
 // 添加调试日志中间件
 app.use((req, res, next) => {
@@ -344,12 +368,14 @@ app.listen(port, host, () => {
     console.log('Available endpoints:');
     console.log(`- GET ${PRODUCT_BASE_PATH}/ (landing)`);
     console.log(`- GET ${PRODUCT_BASE_PATH}/dashboard/ (password protected)`);
+    console.log(`- GET ${PRODUCT_BASE_PATH}/users/ (password protected)`);
     console.log('- GET /fetch-plugin-data');
     console.log('- GET /get-data');
     console.log('- GET /get-directory');
     console.log('- GET /get-save-watchlist');
     console.log('- GET /plugin-trends');
     console.log('- POST /api/plugin-events');
+    console.log('- GET /api/plugin-data/analytics-users');
     console.log('- GET /analytics-healthz');
 });
 

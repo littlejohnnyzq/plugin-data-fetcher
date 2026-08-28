@@ -186,6 +186,25 @@ function createUserStore(databasePath, hmacSecret) {
         SELECT user_id_hash, plugin_id, launch_count, latest_version, first_seen_at, last_seen_at
         FROM analytics_user_plugins WHERE user_id_hash = ? AND plugin_id = ?
     `);
+    const countUsers = database.prepare(`
+        SELECT COUNT(*) AS total
+        FROM analytics_users
+        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+    `);
+    const listUserRowsByRecentUse = database.prepare(`
+        SELECT user_id_hash, user_name, launch_count, created_at, last_seen_at
+        FROM analytics_users
+        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+        ORDER BY last_seen_at DESC, user_id_hash ASC
+        LIMIT ? OFFSET ?
+    `);
+    const listUserRowsByLaunchCount = database.prepare(`
+        SELECT user_id_hash, user_name, launch_count, created_at, last_seen_at
+        FROM analytics_users
+        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+        ORDER BY launch_count DESC, last_seen_at DESC, user_id_hash ASC
+        LIMIT ? OFFSET ?
+    `);
 
     const resolveTransaction = database.transaction((event, nowMs) => {
         const userIdHash = hashUserId(event.userId, hmacSecret);
@@ -225,8 +244,67 @@ function createUserStore(databasePath, hmacSecret) {
         return resolveTransaction(event, nowMs);
     }
 
+    function listUsers(options = {}) {
+        const limit = Math.min(parsePositiveInteger(options.limit, 50), 200);
+        const offset = Math.max(Number.isSafeInteger(options.offset) ? options.offset : 0, 0);
+        const query = String(options.query || '').trim().slice(0, 100);
+        const sort = options.sort === 'launches' ? 'launches' : 'recent';
+        const pattern = `%${query}%`;
+        const total = countUsers.get(query, pattern, pattern).total;
+        const listStatement = sort === 'launches'
+            ? listUserRowsByLaunchCount
+            : listUserRowsByRecentUse;
+        const userRows = listStatement.all(query, pattern, pattern, limit, offset);
+        const pluginsByUser = new Map(userRows.map(user => [user.user_id_hash, []]));
+
+        if (userRows.length > 0) {
+            const placeholders = userRows.map(() => '?').join(',');
+            const relationshipRows = database.prepare(`
+                SELECT
+                    up.user_id_hash,
+                    up.plugin_id,
+                    p.plugin_name,
+                    up.launch_count,
+                    up.latest_version,
+                    up.first_seen_at,
+                    up.last_seen_at
+                FROM analytics_user_plugins AS up
+                LEFT JOIN analytics_plugins AS p ON p.plugin_id = up.plugin_id
+                WHERE up.user_id_hash IN (${placeholders})
+                ORDER BY up.last_seen_at DESC, up.plugin_id ASC
+            `).all(...userRows.map(user => user.user_id_hash));
+
+            relationshipRows.forEach(row => {
+                pluginsByUser.get(row.user_id_hash)?.push({
+                    id: row.plugin_id,
+                    name: row.plugin_name || '',
+                    launchCount: row.launch_count,
+                    latestVersion: row.latest_version || '',
+                    firstSeenAt: row.first_seen_at,
+                    lastSeenAt: row.last_seen_at
+                });
+            });
+        }
+
+        return {
+            total,
+            limit,
+            offset,
+            sort,
+            users: userRows.map(user => ({
+                id: user.user_id_hash,
+                name: user.user_name || '',
+                launchCount: user.launch_count,
+                createdAt: user.created_at,
+                lastSeenAt: user.last_seen_at,
+                plugins: pluginsByUser.get(user.user_id_hash) || []
+            }))
+        };
+    }
+
     return {
         resolve,
+        listUsers,
         getPlugin: pluginId => findPlugin.get(pluginId),
         getUserPlugin: (userId, pluginId) => findUserPlugin.get(
             hashUserId(userId, hmacSecret),
@@ -331,6 +409,10 @@ function createAnalyticsRelay(options = {}) {
     return {
         configured,
         handle,
+        listUsers: options => {
+            if (!configured) throw new Error('Analytics relay is not configured');
+            return userStore.listUsers(options);
+        },
         health: () => ({
             ok: configured && userStore.healthCheck(),
             ga4_mode: dryRun ? 'dry-run' : debug ? 'debug' : 'collect'
