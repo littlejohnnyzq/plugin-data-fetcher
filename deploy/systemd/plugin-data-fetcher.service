@@ -1,0 +1,17 @@
+[Unit]
+Description=TUTOP Figma plugin data fetcher and analytics relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/plugin-data-fetcher
+EnvironmentFile=/root/plugin-data-fetcher/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

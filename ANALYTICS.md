@@ -62,7 +62,7 @@ increments the global and per-plugin launch counters. Add every product to the
 allowlist while keeping all of them on the same relay and HMAC secret:
 
 ```env
-ALLOWED_PLUGIN_IDS=1370606842652257742,another_figma_plugin_id
+ALLOWED_PLUGIN_IDS=1370606842652257742,1387823712562916211,1414925802794094447,1473659572195493091
 ```
 
 In GA4, register `plugin_id`, `plugin_name` and `plugin_version` as event-scoped

@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +26,8 @@ const {
 } = require('./save-tracker');
 const app = express();
 app.set('trust proxy', 1);
-const port = 1086;
+const port = Number.parseInt(process.env.SERVER_PORT || '1086', 10);
+const host = process.env.SERVER_HOST || '127.0.0.1';
 const DATA_DIRECTORY = path.join(__dirname, 'data');
 const DAILY_TRENDS_PATH = path.join(__dirname, 'state', 'plugin-daily-trends.json');
 const PUBLIC_DIRECTORY = path.join(__dirname, 'public');
@@ -335,8 +338,8 @@ function findLatestSuccessfulSaveData(currentTime) {
     return latestById.size > 0 ? [...latestById.values()] : null;
 }
 
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(port, host, () => {
+    console.log(`Server is running on http://${host}:${port}`);
     console.log(`Dashboard password protection: ${dashboardAuth.isConfigured() ? 'enabled' : 'NOT CONFIGURED'}`);
     console.log('Available endpoints:');
     console.log(`- GET ${PRODUCT_BASE_PATH}/ (landing)`);
