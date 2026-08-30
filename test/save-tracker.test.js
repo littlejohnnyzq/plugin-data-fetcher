@@ -1,6 +1,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+    ALWAYS_WATCHED_CONTENT_IDS,
+    REALTIME_SAVE_CONTENT_IDS,
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
     collectSaveCounts,
@@ -40,6 +42,11 @@ test('buildWatchlist unions top growth, high-user and fixed-plugin rules', () =>
         watchlist.plugins.find(plugin => plugin.id === 'fixed').watchReasons,
         ['fixed-plugin']
     );
+});
+
+test('Print for Figma is always included in realtime Save collection', () => {
+    assert.equal(ALWAYS_WATCHED_CONTENT_IDS.has('874441781480244375'), true);
+    assert.equal(REALTIME_SAVE_CONTENT_IDS.has('874441781480244375'), true);
 });
 
 test('mandatory rules are added to an existing watchlist immediately', () => {

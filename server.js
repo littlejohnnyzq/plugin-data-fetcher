@@ -69,6 +69,10 @@ const FIXED_PLUGINS = [
     {
         contentId: '961270034818256057',
         searchQuery: 'Jitter Animation'
+    },
+    {
+        contentId: '874441781480244375',
+        searchQuery: 'Print for Figma CMYK'
     }
 ];
 const browserSaveCollector = createBrowserSaveCollector({ extractSaveCount });
