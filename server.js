@@ -8,6 +8,7 @@ const { mountAnalyticsRelay } = require('./analytics-relay');
 const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
+const { createCollectionDayPlan, resetDailyGrowth } = require('./collection-day');
 const {
     getDailyTrends,
     getHourlyTrends,
@@ -269,7 +270,7 @@ function storeData(data, currentTime) {
     }
 }
 
-function storeDataAsEndOfDay(pluginData, previousDayTime) {
+function storeDataAsEndOfDay(pluginData, previousDayTime, collectionTime) {
     // 计算前一天的日期
     const year = previousDayTime.getFullYear().toString();
     const month = (previousDayTime.getMonth() + 1).toString().padStart(2, '0');
@@ -289,18 +290,16 @@ function storeDataAsEndOfDay(pluginData, previousDayTime) {
     updateDailyTrendSnapshot(
         DAILY_TRENDS_PATH,
         pluginData,
-        previousDayTime,
+        collectionTime,
         REALTIME_SAVE_CONTENT_IDS,
         { day: formatLocalDate(previousDayTime) }
     );
 }
 
-function findPreviousData(currentTime) {
-    const previousDay = new Date(currentTime.getTime() - 86400000); // 减去一天的毫秒数
-
-    const year = previousDay.getFullYear().toString();
-    const month = (previousDay.getMonth() + 1).toString().padStart(2, '0');
-    const day = previousDay.getDate().toString().padStart(2, '0');
+function findDayEndData(dayTime) {
+    const year = dayTime.getFullYear().toString();
+    const month = (dayTime.getMonth() + 1).toString().padStart(2, '0');
+    const day = dayTime.getDate().toString().padStart(2, '0');
 
     // 检查目录是否存在
     const dirPath = path.join(__dirname, 'data', year, month, day);
@@ -399,7 +398,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 async function fetchData(collectionTime = new Date()) {
     try {
         const now = collectionTime;
-        const isMidnight = now.getHours() === 0 && now.getMinutes() === 0;
+        const dayPlan = createCollectionDayPlan(now);
         const realtimePrefetch = await prefetchRealtimeSaveCounts(now);
         const lastSaveData = loadSaveCache() ?? findLatestSuccessfulSaveData(now);
         const saveOptions = {
@@ -411,21 +410,21 @@ async function fetchData(collectionTime = new Date()) {
             stopOnRealtimeWaf: false
         };
 
-        if (isMidnight) {
-            const previousDayTime = new Date(now.getTime() - 86400000); // 减去一天的毫秒数
-            const previousData = findPreviousData(now);
-            const sourceDate = formatLocalDate(previousDayTime);
-            const pluginData = await fetchPluginData(previousData, {
+        if (dayPlan.isMidnight) {
+            const previousData = findDayEndData(dayPlan.comparisonDay);
+            const sourceDate = formatLocalDate(dayPlan.completedDay);
+            const endOfDayData = await fetchPluginData(previousData, {
                 refreshWatchlist: true,
                 watchlistSourceDate: sourceDate,
                 ...saveOptions
             }); // 获取当前插件数据，并按上一完整日增长更新关注清单
-            storeSaveCache(pluginData);
-            storeData(pluginData, now); // 将当前时间传递给storeData
-            storeDataAsEndOfDay(pluginData, previousDayTime); // 特殊处理：同时存储数据作为上一天的最后数据点
+            const startOfDayData = resetDailyGrowth(endOfDayData);
+            storeSaveCache(endOfDayData);
+            storeDataAsEndOfDay(endOfDayData, dayPlan.completedDay, now);
+            storeData(startOfDayData, now);
 
         } else {
-            const previousData = findPreviousData(now); // 改为传递当前时间
+            const previousData = findDayEndData(dayPlan.comparisonDay);
             const pluginData = await fetchPluginData(previousData, saveOptions); // 获取当前插件数据
             storeSaveCache(pluginData);
             storeData(pluginData, now); // 将当前时间传递给storeData
