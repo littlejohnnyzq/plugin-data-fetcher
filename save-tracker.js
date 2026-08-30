@@ -5,6 +5,9 @@ const axios = require('axios');
 const DEFAULT_RETRIES = 3;
 const DEFAULT_REALTIME_DELAY_MS = 2000;
 const DEFAULT_WAF_COOLDOWN_MS = 60000;
+const REALTIME_SAVE_BATCH_SIZE = 5;
+const REALTIME_SAVE_DELAY_MS = 6000;
+const REALTIME_SAVE_DELAY_JITTER_MS = 3000;
 const WATCH_RATIO = 0.5;
 const HIGH_USER_THRESHOLD = 50000;
 const ALWAYS_WATCHED_CONTENT_IDS = new Set([
@@ -22,6 +25,22 @@ const ALWAYS_WATCHED_CONTENT_IDS = new Set([
 const REALTIME_SAVE_CONTENT_IDS = new Set(ALWAYS_WATCHED_CONTENT_IDS);
 const WATCHLIST_PATH = path.join(__dirname, 'state', 'save-watchlist.json');
 const SAVE_CACHE_PATH = path.join(__dirname, 'state', 'save-last-success.json');
+
+function selectRealtimeSaveBatch(contentIds, currentTime, batchSize = REALTIME_SAVE_BATCH_SIZE) {
+    if (contentIds.length === 0) return [];
+    const safeBatchSize = Math.min(Math.max(1, batchSize), contentIds.length);
+    const batchNumber = Math.floor(currentTime.getTime() / 1800000);
+    const offset = (batchNumber * safeBatchSize) % contentIds.length;
+    const orderedContentIds = [
+        ...contentIds.slice(offset),
+        ...contentIds.slice(0, offset)
+    ];
+    return orderedContentIds.slice(0, safeBatchSize);
+}
+
+function calculateJitteredDelay(baseDelayMs, jitterMs, random = Math.random) {
+    return baseDelayMs + Math.floor(random() * (jitterMs + 1));
+}
 
 function toFiniteNumber(value) {
     if (value === null || value === undefined || value === '' || value === '--') return null;
@@ -354,17 +373,22 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
 module.exports = {
     ALWAYS_WATCHED_CONTENT_IDS,
     HIGH_USER_THRESHOLD,
+    REALTIME_SAVE_BATCH_SIZE,
     REALTIME_SAVE_CONTENT_IDS,
+    REALTIME_SAVE_DELAY_JITTER_MS,
+    REALTIME_SAVE_DELAY_MS,
     SAVE_CACHE_PATH,
     WATCHLIST_PATH,
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
+    calculateJitteredDelay,
     collectSaveCounts,
     extractSaveCount,
     fetchSaveCountFromFigma,
     loadWatchlist,
     loadSaveCache,
     mapWithConcurrency,
+    selectRealtimeSaveBatch,
     storeSaveCache,
     storeWatchlist
 };

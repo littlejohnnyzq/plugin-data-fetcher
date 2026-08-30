@@ -21,7 +21,12 @@ const {
     extractSaveCount,
     loadSaveCache,
     loadWatchlist,
+    REALTIME_SAVE_BATCH_SIZE,
     REALTIME_SAVE_CONTENT_IDS,
+    REALTIME_SAVE_DELAY_JITTER_MS,
+    REALTIME_SAVE_DELAY_MS,
+    calculateJitteredDelay,
+    selectRealtimeSaveBatch,
     storeSaveCache,
     storeWatchlist
 } = require('./save-tracker');
@@ -76,9 +81,6 @@ const FIXED_PLUGINS = [
     }
 ];
 const browserSaveCollector = createBrowserSaveCollector({ extractSaveCount });
-const REALTIME_SAVE_BATCH_SIZE = 3;
-const REALTIME_SAVE_DELAY_MS = 8000;
-const REALTIME_SAVE_DELAY_JITTER_MS = 4000;
 
 function wait(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -86,14 +88,11 @@ function wait(milliseconds) {
 
 async function prefetchRealtimeSaveCounts(currentTime) {
     const allContentIds = [...REALTIME_SAVE_CONTENT_IDS];
-    const batchSize = Math.min(REALTIME_SAVE_BATCH_SIZE, allContentIds.length);
-    const batchNumber = Math.floor(currentTime.getTime() / 1800000);
-    const offset = (batchNumber * batchSize) % allContentIds.length;
-    const orderedContentIds = [
-        ...allContentIds.slice(offset),
-        ...allContentIds.slice(0, offset)
-    ];
-    const selectedContentIds = orderedContentIds.slice(0, batchSize);
+    const selectedContentIds = selectRealtimeSaveBatch(
+        allContentIds,
+        currentTime,
+        REALTIME_SAVE_BATCH_SIZE
+    );
     const results = new Map();
 
     console.log(`Browser Save batch: ${selectedContentIds.join(', ')}`);
@@ -125,8 +124,10 @@ async function prefetchRealtimeSaveCounts(currentTime) {
         }
 
         if (index < selectedContentIds.length - 1) {
-            const delayMs = REALTIME_SAVE_DELAY_MS
-                + Math.floor(Math.random() * (REALTIME_SAVE_DELAY_JITTER_MS + 1));
+            const delayMs = calculateJitteredDelay(
+                REALTIME_SAVE_DELAY_MS,
+                REALTIME_SAVE_DELAY_JITTER_MS
+            );
             await wait(delayMs);
         }
     }

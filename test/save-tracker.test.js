@@ -2,12 +2,17 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
     ALWAYS_WATCHED_CONTENT_IDS,
+    REALTIME_SAVE_BATCH_SIZE,
     REALTIME_SAVE_CONTENT_IDS,
+    REALTIME_SAVE_DELAY_JITTER_MS,
+    REALTIME_SAVE_DELAY_MS,
     addMandatoryPluginsToWatchlist,
     buildWatchlist,
+    calculateJitteredDelay,
     collectSaveCounts,
     extractSaveCount,
-    mapWithConcurrency
+    mapWithConcurrency,
+    selectRealtimeSaveBatch
 } = require('../save-tracker');
 
 test('buildWatchlist selects the top half by previous-day user growth', () => {
@@ -47,6 +52,28 @@ test('buildWatchlist unions top growth, high-user and fixed-plugin rules', () =>
 test('Print for Figma is always included in realtime Save collection', () => {
     assert.equal(ALWAYS_WATCHED_CONTENT_IDS.has('874441781480244375'), true);
     assert.equal(REALTIME_SAVE_CONTENT_IDS.has('874441781480244375'), true);
+});
+
+test('ten realtime Save plugins rotate in two non-overlapping batches of five', () => {
+    const contentIds = [...REALTIME_SAVE_CONTENT_IDS];
+    const firstBoundary = new Date(2026, 7, 30, 10, 0, 0, 0);
+    const secondBoundary = new Date(firstBoundary.getTime() + 30 * 60 * 1000);
+    const firstBatch = selectRealtimeSaveBatch(contentIds, firstBoundary);
+    const secondBatch = selectRealtimeSaveBatch(contentIds, secondBoundary);
+
+    assert.equal(contentIds.length, 10);
+    assert.equal(REALTIME_SAVE_BATCH_SIZE, 5);
+    assert.equal(firstBatch.length, 5);
+    assert.equal(secondBatch.length, 5);
+    assert.equal(firstBatch.some(contentId => secondBatch.includes(contentId)), false);
+    assert.deepEqual(new Set([...firstBatch, ...secondBatch]), new Set(contentIds));
+});
+
+test('realtime Save random wait stays between six and nine seconds', () => {
+    assert.equal(REALTIME_SAVE_DELAY_MS, 6000);
+    assert.equal(REALTIME_SAVE_DELAY_JITTER_MS, 3000);
+    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0), 6000);
+    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0.999999), 9000);
 });
 
 test('mandatory rules are added to an existing watchlist immediately', () => {
