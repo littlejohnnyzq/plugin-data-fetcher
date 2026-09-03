@@ -206,6 +206,30 @@
             background: #fff;
         }
 
+        .trend-view-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e6e8eb;
+        }
+
+        .trend-view-tab {
+            margin-bottom: -1px;
+            padding: 4px 1px 7px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: #666;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .trend-view-tab.active {
+            border-bottom-color: #236de3;
+            color: #236de3;
+            font-weight: 600;
+        }
+
         .trend-toolbar,
         .trend-control-group {
             display: flex;
@@ -307,6 +331,60 @@
             color: #777;
             font-size: 11px;
         }
+
+        .overview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 9px;
+            color: #777;
+            font-size: 11px;
+        }
+
+        .overview-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e0e3e7;
+            border-radius: 6px;
+        }
+
+        .overview-table {
+            width: 100%;
+            min-width: 1120px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .overview-table th,
+        .overview-table td {
+            padding: 11px 6px;
+            border-right: 1px solid #e5e7ea;
+            border-bottom: 1px solid #e5e7ea;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .overview-table th:last-child,
+        .overview-table td:last-child { border-right: 0; }
+        .overview-table tbody tr:last-child th,
+        .overview-table tbody tr:last-child td { border-bottom: 0; }
+        .overview-table thead th { background: #f2f4f6; color: #555; font-size: 11px; font-weight: 500; }
+        .overview-table thead th:first-child,
+        .overview-table tbody th { width: 92px; }
+        .overview-table tbody th { background: #fafbfc; color: #555; font-size: 11px; font-weight: 500; text-align: left; }
+        .overview-table td { color: #555; }
+        .overview-primary-value { font-size: 16px; font-weight: 600; line-height: 19px; }
+        .overview-primary-value.positive { color: #d93025; }
+        .overview-primary-value.negative { color: #188038; }
+        .overview-secondary-value { margin-top: 2px; color: #777; font-size: 11px; font-weight: 400; line-height: 14px; }
+        .overview-plugin-name { display: block; overflow: hidden; text-overflow: ellipsis; }
+        .overview-owned { color: #236de3; }
+        .overview-empty { padding: 38px 12px; color: #777; text-align: center; }
+
+        @media (max-width: 600px) {
+            .overview-header { align-items: flex-start; flex-direction: column; }
+        }
     </style>
 </head>
 
@@ -329,25 +407,38 @@
     </div> -->
 
     <section class="trend-panel">
-        <div class="trend-toolbar">
-            <div class="trend-control-group" id="trend-metric-controls">
-                <button type="button" data-metric="users">用户日增</button>
-                <button type="button" data-metric="likes">点赞日增</button>
-                <button type="button" class="active" data-metric="saves">保存日增</button>
-            </div>
-            <div class="trend-control-group" id="trend-period-controls">
-                <button type="button" class="active" data-mode="hourly">单日分时</button>
-                <button type="button" data-mode="daily" data-days="30">最近1个月</button>
-                <button type="button" data-mode="daily" data-days="90">最近3个月</button>
-                <input id="trend-day" type="date" aria-label="选择分时数据日期">
-                <span id="trend-status"></span>
-            </div>
+        <div class="trend-view-tabs" id="trend-view-tabs">
+            <button class="trend-view-tab active" type="button" data-view="chart">趋势图</button>
+            <button class="trend-view-tab" type="button" data-view="overview">插件概览</button>
         </div>
-        <div class="trend-chart-wrap">
-            <canvas id="trend-chart"></canvas>
-            <div id="trend-tooltip" class="trend-tooltip"></div>
+        <div id="trend-chart-view">
+            <div class="trend-toolbar">
+                <div class="trend-control-group" id="trend-metric-controls">
+                    <button type="button" data-metric="users">用户日增</button>
+                    <button type="button" data-metric="likes">点赞日增</button>
+                    <button type="button" class="active" data-metric="saves">保存日增</button>
+                </div>
+                <div class="trend-control-group" id="trend-period-controls">
+                    <button type="button" class="active" data-mode="hourly">单日分时</button>
+                    <button type="button" data-mode="daily" data-days="30">最近1个月</button>
+                    <button type="button" data-mode="daily" data-days="90">最近3个月</button>
+                    <input id="trend-day" type="date" aria-label="选择分时数据日期">
+                    <span id="trend-status"></span>
+                </div>
+            </div>
+            <div class="trend-chart-wrap">
+                <canvas id="trend-chart"></canvas>
+                <div id="trend-tooltip" class="trend-tooltip"></div>
+            </div>
+            <div id="trend-legend" class="trend-legend"></div>
         </div>
-        <div id="trend-legend" class="trend-legend"></div>
+        <div id="trend-overview-view" hidden>
+            <div class="overview-header">
+                <span>近期数据取最新采集点；点赞率、保存率按累计量 ÷ 当前用户数计算</span>
+                <span id="overview-status">加载中…</span>
+            </div>
+            <div id="overview-table-wrap" class="overview-table-wrap"></div>
+        </div>
     </section>
 
     <div class="container">
@@ -380,6 +471,7 @@
 
     </div>
 
+    <script src="/product/plugin-data/chart-scale.js"></script>
     <script>
 
         const HIGHLIGHTED_PLUGIN_IDS = new Set([
@@ -391,7 +483,8 @@
         const PLUGIN_DATA_API = '/api/plugin-data';
         const TREND_COLORS = [
             '#236de3', '#e34a33', '#18a058', '#8b5cf6', '#e59f00',
-            '#00a6a6', '#d946ef', '#795548', '#64748b'
+            '#00a6a6', '#d946ef', '#795548', '#64748b', '#f97316',
+            '#0f766e'
         ];
         const trendState = {
             metric: 'saves',
@@ -400,6 +493,7 @@
             data: null,
             hiddenContentIds: new Set()
         };
+        let overviewLoaded = false;
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
             fetchDirectory();  // 获取目录信息
@@ -487,10 +581,121 @@
             });
 
             dayInput.addEventListener('change', loadPluginTrends);
+            document.querySelectorAll('#trend-view-tabs button').forEach(button => {
+                button.addEventListener('click', () => switchTrendView(button.dataset.view, button));
+            });
             document.getElementById('trend-chart').addEventListener('mousemove', showTrendTooltip);
             document.getElementById('trend-chart').addEventListener('mouseleave', hideTrendTooltip);
             window.addEventListener('resize', () => drawTrendChart(trendState.data));
             loadPluginTrends();
+        }
+
+        function switchTrendView(view, activeButton) {
+            setActiveTrendButton('#trend-view-tabs button', activeButton);
+            const showOverview = view === 'overview';
+            document.getElementById('trend-chart-view').hidden = showOverview;
+            document.getElementById('trend-overview-view').hidden = !showOverview;
+            hideTrendTooltip();
+            if (showOverview && !overviewLoaded) loadPluginOverview();
+            if (!showOverview) drawTrendChart(trendState.data);
+        }
+
+        async function loadPluginOverview() {
+            const status = document.getElementById('overview-status');
+            status.textContent = '加载中…';
+            try {
+                const response = await fetch(`${PLUGIN_DATA_API}/plugin-overview`);
+                if (!response.ok) throw new Error(`概览数据请求失败（${response.status}）`);
+                const overview = await response.json();
+                renderPluginOverview(overview.plugins);
+                status.textContent = overview.capturedAt ? `采集于 ${overview.capturedAt}` : '暂无数据';
+                overviewLoaded = true;
+            } catch (error) {
+                console.error('Error loading plugin overview:', error);
+                renderPluginOverview([]);
+                status.textContent = '加载失败';
+            }
+        }
+
+        function renderPluginOverview(plugins) {
+            const wrapper = document.getElementById('overview-table-wrap');
+            wrapper.innerHTML = '';
+            if (!plugins.length) {
+                const empty = document.createElement('div');
+                empty.className = 'overview-empty';
+                empty.textContent = '暂无可用的插件概览数据';
+                wrapper.appendChild(empty);
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'overview-table';
+            const head = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const metricHeader = document.createElement('th');
+            metricHeader.textContent = '指标';
+            headerRow.appendChild(metricHeader);
+            plugins.forEach(plugin => {
+                const header = document.createElement('th');
+                const name = document.createElement('span');
+                name.className = `overview-plugin-name${plugin.owned ? ' overview-owned' : ''}`;
+                name.textContent = abbreviatePluginName(plugin.name, 10);
+                name.title = `${plugin.name}${plugin.owned ? '（自有插件）' : ''}`;
+                header.appendChild(name);
+                headerRow.appendChild(header);
+            });
+            head.appendChild(headerRow);
+            table.appendChild(head);
+
+            const rows = [
+                { label: '用户日增', delta: plugin => plugin.userDelta },
+                { label: '点赞', delta: plugin => plugin.likeDelta, rate: plugin => plugin.likeRate },
+                { label: '保存', delta: plugin => plugin.saveDelta, rate: plugin => plugin.saveRate }
+            ];
+            const body = document.createElement('tbody');
+            rows.forEach(rowDefinition => {
+                const row = document.createElement('tr');
+                const label = document.createElement('th');
+                label.scope = 'row';
+                label.textContent = rowDefinition.label;
+                row.appendChild(label);
+                plugins.forEach(plugin => {
+                    const cell = document.createElement('td');
+                    const delta = rowDefinition.delta(plugin);
+                    const primaryValue = document.createElement('div');
+                    primaryValue.className = 'overview-primary-value';
+                    primaryValue.textContent = formatSignedTrendValue(delta);
+                    if (delta > 0) primaryValue.classList.add('positive');
+                    if (delta < 0) primaryValue.classList.add('negative');
+                    cell.appendChild(primaryValue);
+                    if (rowDefinition.rate) {
+                        const secondaryValue = document.createElement('div');
+                        secondaryValue.className = 'overview-secondary-value';
+                        secondaryValue.textContent = `率 ${formatRate(rowDefinition.rate(plugin))}`;
+                        cell.appendChild(secondaryValue);
+                    }
+                    if (rowDefinition.label === '保存') {
+                        cell.title = plugin.saveCollectedAt
+                            ? `保存数更新：${formatOverviewDate(plugin.saveCollectedAt)}`
+                            : '保存数尚未成功采集';
+                    }
+                    row.appendChild(cell);
+                });
+                body.appendChild(row);
+            });
+            table.appendChild(body);
+            wrapper.appendChild(table);
+        }
+
+        function formatRate(rate) {
+            return Number.isFinite(rate) ? `${(rate * 100).toFixed(2)}%` : '—';
+        }
+
+        function formatOverviewDate(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('zh-CN', {
+                month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+            });
         }
 
         function setActiveTrendButton(selector, activeButton) {
@@ -591,23 +796,12 @@
                 return;
             }
 
-            let minimum = Math.min(...values);
-            let maximum = Math.max(...values);
-            if (minimum === maximum) {
-                const padding = Math.max(1, Math.abs(maximum) * 0.01);
-                minimum = minimum >= 0 ? 0 : minimum - padding;
-                maximum = maximum <= 0 ? 0 : maximum + padding;
-            } else {
-                const padding = (maximum - minimum) * 0.06;
-                minimum = minimum >= 0 ? 0 : minimum - padding;
-                maximum = maximum <= 0 ? 0 : maximum + padding;
-            }
+            const { minimum, maximum, step, ticks } = ChartScale.createYAxisScale(values);
+            const yAt = value => pad.top + ((maximum - value) / (maximum - minimum)) * plotHeight;
 
             ctx.font = '11px Arial';
-            for (let tick = 0; tick <= 4; tick++) {
-                const ratio = tick / 4;
-                const y = pad.top + plotHeight * ratio;
-                const value = maximum - (maximum - minimum) * ratio;
+            for (const value of ticks) {
+                const y = yAt(value);
                 ctx.strokeStyle = '#edf0f3';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -617,14 +811,12 @@
                 ctx.fillStyle = '#777';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(formatCompactNumber(value), pad.left - 7, y);
+                ctx.fillText(ChartScale.formatAxisTick(value, step), pad.left - 7, y);
             }
 
             const xAt = index => labels.length === 1
                 ? pad.left + plotWidth / 2
                 : pad.left + (plotWidth * index) / (labels.length - 1);
-            const yAt = value => pad.top + ((maximum - value) / (maximum - minimum)) * plotHeight;
-
             visibleSeries.forEach(series => {
                 ctx.strokeStyle = series.color;
                 ctx.lineWidth = 1.7;
@@ -653,13 +845,6 @@
                 const displayLabel = trendState.mode === 'daily' ? label.slice(5) : label;
                 ctx.fillText(displayLabel, xAt(index), height - pad.bottom + 8);
             });
-        }
-
-        function formatCompactNumber(value) {
-            const absolute = Math.abs(value);
-            if (absolute >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (absolute >= 1000) return `${(value / 1000).toFixed(1)}K`;
-            return Math.round(value).toLocaleString('zh-CN');
         }
 
         function showTrendTooltip(event) {
@@ -723,9 +908,13 @@
         }
 
         function abbreviateTrendPluginName(name) {
+            return abbreviatePluginName(name, 15);
+        }
+
+        function abbreviatePluginName(name, maximumLength) {
             const characters = Array.from(String(name || ''));
-            return characters.length > 15
-                ? `${characters.slice(0, 15).join('')}…`
+            return characters.length > maximumLength
+                ? `${characters.slice(0, maximumLength).join('')}…`
                 : characters.join('');
         }
 

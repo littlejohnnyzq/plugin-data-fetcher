@@ -9,6 +9,7 @@ const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
 const { createCollectionDayPlan, resetDailyGrowth } = require('./collection-day');
+const { buildPluginOverview, findLatestCollection } = require('./plugin-overview');
 const {
     getDailyTrends,
     getHourlyTrends,
@@ -21,7 +22,7 @@ const {
     extractSaveCount,
     loadSaveCache,
     loadWatchlist,
-    REALTIME_SAVE_BATCH_SIZE,
+    REALTIME_SAVE_BATCHES,
     REALTIME_SAVE_CONTENT_IDS,
     REALTIME_SAVE_DELAY_JITTER_MS,
     REALTIME_SAVE_DELAY_MS,
@@ -78,6 +79,10 @@ const FIXED_PLUGINS = [
     {
         contentId: '874441781480244375',
         searchQuery: 'Print for Figma CMYK'
+    },
+    {
+        contentId: '1419316259939080556',
+        searchQuery: 'Printery Print Export CMYK'
     }
 ];
 const browserSaveCollector = createBrowserSaveCollector({ extractSaveCount });
@@ -91,7 +96,7 @@ async function prefetchRealtimeSaveCounts(currentTime) {
     const selectedContentIds = selectRealtimeSaveBatch(
         allContentIds,
         currentTime,
-        REALTIME_SAVE_BATCH_SIZE
+        REALTIME_SAVE_BATCHES
     );
     const results = new Map();
 
@@ -220,6 +225,10 @@ app.get(`${PRODUCT_BASE_PATH}/users`, dashboardAuth.requireAuth, (req, res) => {
         return res.sendFile(path.join(PUBLIC_DIRECTORY, 'users.html'));
     }
     return res.redirect(301, `${PRODUCT_BASE_PATH}/users/`);
+});
+
+app.get(`${PRODUCT_BASE_PATH}/chart-scale.js`, dashboardAuth.requireAuth, (req, res) => {
+    return res.sendFile(path.join(PUBLIC_DIRECTORY, 'chart-scale.js'));
 });
 
 // All collector pages and legacy/internal endpoints below this point require login.
@@ -755,6 +764,16 @@ app.get(['/plugin-trends', '/api/plugin-data/plugin-trends'], (req, res) => {
     } catch (error) {
         console.error('Failed to load plugin trends:', error);
         res.status(500).json({ error: 'Failed to load plugin trends' });
+    }
+});
+
+app.get(['/plugin-overview', '/api/plugin-data/plugin-overview'], (req, res) => {
+    try {
+        const latestCollection = findLatestCollection(DATA_DIRECTORY);
+        res.json(buildPluginOverview(latestCollection, REALTIME_SAVE_CONTENT_IDS));
+    } catch (error) {
+        console.error('Failed to load plugin overview:', error);
+        res.status(500).json({ error: 'Failed to load plugin overview' });
     }
 });
 

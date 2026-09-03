@@ -5,8 +5,7 @@ const axios = require('axios');
 const DEFAULT_RETRIES = 3;
 const DEFAULT_REALTIME_DELAY_MS = 2000;
 const DEFAULT_WAF_COOLDOWN_MS = 60000;
-const REALTIME_SAVE_BATCH_SIZE = 5;
-const REALTIME_SAVE_DELAY_MS = 6000;
+const REALTIME_SAVE_DELAY_MS = 4000;
 const REALTIME_SAVE_DELAY_JITTER_MS = 3000;
 const WATCH_RATIO = 0.5;
 const HIGH_USER_THRESHOLD = 50000;
@@ -20,22 +19,36 @@ const ALWAYS_WATCHED_CONTENT_IDS = new Set([
     '1249759048471403961',
     '988173868842375596',
     '961270034818256057',
-    '874441781480244375'
+    '874441781480244375',
+    '1419316259939080556'
 ]);
 const REALTIME_SAVE_CONTENT_IDS = new Set(ALWAYS_WATCHED_CONTENT_IDS);
+const REALTIME_SAVE_BATCHES = [
+    [
+        '1370606842652257742',
+        '1387823712562916211',
+        '1414925802794094447',
+        '1473659572195493091',
+        '731451122947612104'
+    ],
+    [
+        '1404821057322599271',
+        '1249759048471403961',
+        '988173868842375596',
+        '961270034818256057',
+        '874441781480244375',
+        '1419316259939080556'
+    ]
+];
 const WATCHLIST_PATH = path.join(__dirname, 'state', 'save-watchlist.json');
 const SAVE_CACHE_PATH = path.join(__dirname, 'state', 'save-last-success.json');
 
-function selectRealtimeSaveBatch(contentIds, currentTime, batchSize = REALTIME_SAVE_BATCH_SIZE) {
-    if (contentIds.length === 0) return [];
-    const safeBatchSize = Math.min(Math.max(1, batchSize), contentIds.length);
+function selectRealtimeSaveBatch(contentIds, currentTime, batches = REALTIME_SAVE_BATCHES) {
+    if (contentIds.length === 0 || batches.length === 0) return [];
+    const availableContentIds = new Set(contentIds.map(String));
     const batchNumber = Math.floor(currentTime.getTime() / 1800000);
-    const offset = (batchNumber * safeBatchSize) % contentIds.length;
-    const orderedContentIds = [
-        ...contentIds.slice(offset),
-        ...contentIds.slice(0, offset)
-    ];
-    return orderedContentIds.slice(0, safeBatchSize);
+    return batches[batchNumber % batches.length]
+        .filter(contentId => availableContentIds.has(contentId));
 }
 
 function calculateJitteredDelay(baseDelayMs, jitterMs, random = Math.random) {
@@ -373,7 +386,7 @@ async function collectSaveCounts(plugins, watchlist, previousData, options = {})
 module.exports = {
     ALWAYS_WATCHED_CONTENT_IDS,
     HIGH_USER_THRESHOLD,
-    REALTIME_SAVE_BATCH_SIZE,
+    REALTIME_SAVE_BATCHES,
     REALTIME_SAVE_CONTENT_IDS,
     REALTIME_SAVE_DELAY_JITTER_MS,
     REALTIME_SAVE_DELAY_MS,

@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
     ALWAYS_WATCHED_CONTENT_IDS,
-    REALTIME_SAVE_BATCH_SIZE,
+    REALTIME_SAVE_BATCHES,
     REALTIME_SAVE_CONTENT_IDS,
     REALTIME_SAVE_DELAY_JITTER_MS,
     REALTIME_SAVE_DELAY_MS,
@@ -54,26 +54,27 @@ test('Print for Figma is always included in realtime Save collection', () => {
     assert.equal(REALTIME_SAVE_CONTENT_IDS.has('874441781480244375'), true);
 });
 
-test('ten realtime Save plugins rotate in two non-overlapping batches of five', () => {
+test('eleven realtime Save plugins rotate in explicit batches of five and six', () => {
     const contentIds = [...REALTIME_SAVE_CONTENT_IDS];
     const firstBoundary = new Date(2026, 7, 30, 10, 0, 0, 0);
     const secondBoundary = new Date(firstBoundary.getTime() + 30 * 60 * 1000);
     const firstBatch = selectRealtimeSaveBatch(contentIds, firstBoundary);
     const secondBatch = selectRealtimeSaveBatch(contentIds, secondBoundary);
 
-    assert.equal(contentIds.length, 10);
-    assert.equal(REALTIME_SAVE_BATCH_SIZE, 5);
-    assert.equal(firstBatch.length, 5);
-    assert.equal(secondBatch.length, 5);
+    assert.equal(contentIds.length, 11);
+    assert.deepEqual(REALTIME_SAVE_BATCHES.map(batch => batch.length), [5, 6]);
+    assert.deepEqual(new Set(REALTIME_SAVE_BATCHES.flat()), new Set(contentIds));
+    assert.deepEqual([firstBatch.length, secondBatch.length].sort(), [5, 6]);
     assert.equal(firstBatch.some(contentId => secondBatch.includes(contentId)), false);
     assert.deepEqual(new Set([...firstBatch, ...secondBatch]), new Set(contentIds));
+    assert.equal(REALTIME_SAVE_BATCHES[1].includes('1419316259939080556'), true);
 });
 
-test('realtime Save random wait stays between six and nine seconds', () => {
-    assert.equal(REALTIME_SAVE_DELAY_MS, 6000);
+test('realtime Save random wait stays between four and seven seconds', () => {
+    assert.equal(REALTIME_SAVE_DELAY_MS, 4000);
     assert.equal(REALTIME_SAVE_DELAY_JITTER_MS, 3000);
-    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0), 6000);
-    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0.999999), 9000);
+    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0), 4000);
+    assert.equal(calculateJitteredDelay(REALTIME_SAVE_DELAY_MS, REALTIME_SAVE_DELAY_JITTER_MS, () => 0.999999), 7000);
 });
 
 test('mandatory rules are added to an existing watchlist immediately', () => {

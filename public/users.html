@@ -85,7 +85,7 @@
         }
         table {
             width: 100%;
-            min-width: 980px;
+            min-width: 720px;
             border-collapse: collapse;
         }
         th,
@@ -104,16 +104,6 @@
         tbody tr:last-child td { border-bottom: 0; }
         tbody tr:hover { background: #fafbfc; }
         .user-name { min-width: 110px; font-weight: 600; }
-        .anonymous-id {
-            display: block;
-            width: 265px;
-            color: #555;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 11px;
-            line-height: 16px;
-            overflow-wrap: anywhere;
-            user-select: all;
-        }
         .plugins {
             display: flex;
             min-width: 250px;
@@ -162,7 +152,7 @@
 
     <div class="toolbar">
         <div class="search-group">
-            <input id="user-search" type="search" placeholder="搜索用户名称或匿名 ID" autocomplete="off">
+            <input id="user-search" type="search" placeholder="搜索用户名称" autocomplete="off">
             <button id="search-button" class="action-button" type="button">搜索</button>
         </div>
         <div class="toolbar-meta">
@@ -181,7 +171,6 @@
             <thead>
                 <tr>
                     <th>名称</th>
-                    <th>匿名 ID</th>
                     <th>使用插件</th>
                     <th>总启动</th>
                     <th>首次使用</th>
@@ -265,14 +254,6 @@
             users.forEach(user => {
                 const row = document.createElement('tr');
                 row.appendChild(createTextCell(user.name || '未命名', 'user-name'));
-
-                const idCell = document.createElement('td');
-                const id = document.createElement('code');
-                id.className = 'anonymous-id';
-                id.textContent = user.id;
-                id.title = 'HMAC 匿名用户 ID';
-                idCell.appendChild(id);
-                row.appendChild(idCell);
 
                 const pluginsCell = document.createElement('td');
                 const plugins = document.createElement('div');
