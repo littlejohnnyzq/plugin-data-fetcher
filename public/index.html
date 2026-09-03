@@ -259,7 +259,8 @@
             color: #fff;
         }
 
-        #trend-day {
+        #trend-day,
+        .overview-date {
             height: 25px;
             box-sizing: border-box;
             border: 1px solid #d5d5d5;
@@ -436,9 +437,10 @@
             <div class="overview-header">
                 <span>点赞率、保存率按所选周期增量 ÷ 用户增量计算</span>
                 <div class="trend-control-group" id="overview-period-controls">
-                    <button type="button" class="active" data-days="1">当日</button>
-                    <button type="button" data-days="30">最近1个月</button>
-                    <button type="button" data-days="90">最近3个月</button>
+                    <input id="overview-start" class="overview-date" type="date" aria-label="概览开始日期">
+                    <span>至</span>
+                    <input id="overview-end" class="overview-date" type="date" aria-label="概览结束日期">
+                    <button id="overview-apply" type="button">查询</button>
                     <span id="overview-status">加载中…</span>
                 </div>
             </div>
@@ -498,7 +500,6 @@
             data: null,
             hiddenContentIds: new Set()
         };
-        const overviewState = { days: 1 };
         let overviewLoaded = false;
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
@@ -590,13 +591,7 @@
             document.querySelectorAll('#trend-view-tabs button').forEach(button => {
                 button.addEventListener('click', () => switchTrendView(button.dataset.view, button));
             });
-            document.querySelectorAll('#overview-period-controls button').forEach(button => {
-                button.addEventListener('click', () => {
-                    overviewState.days = Number(button.dataset.days);
-                    setActiveTrendButton('#overview-period-controls button', button);
-                    loadPluginOverview();
-                });
-            });
+            document.getElementById('overview-apply').addEventListener('click', loadPluginOverview);
             document.getElementById('trend-chart').addEventListener('mousemove', showTrendTooltip);
             document.getElementById('trend-chart').addEventListener('mouseleave', hideTrendTooltip);
             window.addEventListener('resize', () => drawTrendChart(trendState.data));
@@ -615,13 +610,35 @@
 
         async function loadPluginOverview() {
             const status = document.getElementById('overview-status');
+            const startInput = document.getElementById('overview-start');
+            const endInput = document.getElementById('overview-end');
+            if ((startInput.value && !endInput.value) || (!startInput.value && endInput.value)) {
+                status.textContent = '请选择完整日期范围';
+                return;
+            }
+            if (startInput.value && endInput.value && startInput.value > endInput.value) {
+                status.textContent = '开始日期不能晚于结束日期';
+                return;
+            }
+            const params = new URLSearchParams();
+            if (startInput.value && endInput.value) {
+                params.set('start', startInput.value);
+                params.set('end', endInput.value);
+            }
             status.textContent = '加载中…';
             try {
-                const response = await fetch(`${PLUGIN_DATA_API}/plugin-overview?days=${overviewState.days}`);
+                const query = params.size > 0 ? `?${params}` : '';
+                const response = await fetch(`${PLUGIN_DATA_API}/plugin-overview${query}`);
                 if (!response.ok) throw new Error(`概览数据请求失败（${response.status}）`);
                 const overview = await response.json();
                 renderPluginOverview(overview.plugins);
-                status.textContent = overview.capturedAt ? `截止 ${overview.capturedAt}` : '暂无数据';
+                if (overview.start && overview.end) {
+                    startInput.value = overview.start;
+                    endInput.value = overview.end;
+                }
+                status.textContent = overview.capturedAt
+                    ? `${overview.days} 天 · 截止 ${overview.capturedAt}`
+                    : '暂无数据';
                 overviewLoaded = true;
             } catch (error) {
                 console.error('Error loading plugin overview:', error);
@@ -833,6 +850,7 @@
             visibleSeries.forEach(series => {
                 ctx.strokeStyle = series.color;
                 ctx.lineWidth = 1.7;
+                ctx.globalAlpha = HIGHLIGHTED_PLUGIN_IDS.has(String(series.contentId)) ? 1 : 0.4;
                 ctx.beginPath();
                 let drawing = false;
                 series.values.forEach((value, index) => {
@@ -848,6 +866,7 @@
                 });
                 ctx.stroke();
             });
+            ctx.globalAlpha = 1;
 
             const labelStep = Math.max(1, Math.ceil(labels.length / 8));
             ctx.fillStyle = '#666';

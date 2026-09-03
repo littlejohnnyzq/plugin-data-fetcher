@@ -9,7 +9,11 @@ const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
 const { createCollectionDayPlan, resetDailyGrowth } = require('./collection-day');
-const { buildPeriodPluginOverview, findLatestCollection } = require('./plugin-overview');
+const {
+    buildPeriodPluginOverview,
+    findLatestCollection,
+    resolveOverviewDateRange
+} = require('./plugin-overview');
 const {
     getDailyTrends,
     getHourlyTrends,
@@ -769,24 +773,30 @@ app.get(['/plugin-trends', '/api/plugin-data/plugin-trends'], (req, res) => {
 
 app.get(['/plugin-overview', '/api/plugin-data/plugin-overview'], (req, res) => {
     try {
-        const requestedDays = Number.parseInt(req.query.days || '1', 10);
-        const days = [1, 30, 90].includes(requestedDays) ? requestedDays : 1;
         const latestCollection = findLatestCollection(DATA_DIRECTORY);
         if (!latestCollection) {
-            return res.json({ capturedAt: null, days, plugins: [] });
+            return res.json({ capturedAt: null, start: null, end: null, days: 0, plugins: [] });
         }
-        const [year, month, day] = latestCollection.day.split('-').map(Number);
-        const anchorTime = new Date(year, month - 1, day, 12, 0, 0, 0);
+        let dateRange;
+        try {
+            dateRange = resolveOverviewDateRange(
+                String(req.query.start || ''),
+                String(req.query.end || ''),
+                latestCollection.day
+            );
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
         const trendsByMetric = Object.fromEntries(
             ['users', 'likes', 'saves'].map(metric => [
                 metric,
                 getDailyTrends(
                     DAILY_TRENDS_PATH,
                     DATA_DIRECTORY,
-                    days,
+                    dateRange.days,
                     metric,
                     REALTIME_SAVE_CONTENT_IDS,
-                    anchorTime
+                    dateRange.endDate
                 )
             ])
         );
@@ -794,7 +804,11 @@ app.get(['/plugin-overview', '/api/plugin-data/plugin-overview'], (req, res) => 
             latestCollection,
             REALTIME_SAVE_CONTENT_IDS,
             trendsByMetric,
-            days
+            {
+                start: dateRange.start,
+                end: dateRange.end,
+                days: dateRange.days
+            }
         ));
     } catch (error) {
         console.error('Failed to load plugin overview:', error);

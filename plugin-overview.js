@@ -52,6 +52,37 @@ function calculateRate(value, users) {
     return value === null || users === null || users <= 0 ? null : value / users;
 }
 
+function parseLocalDay(day) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+    const [year, month, date] = day.split('-').map(Number);
+    const parsed = new Date(year, month - 1, date, 12, 0, 0, 0);
+    return parsed.getFullYear() === year
+        && parsed.getMonth() === month - 1
+        && parsed.getDate() === date
+        ? parsed
+        : null;
+}
+
+function resolveOverviewDateRange(start, end, fallbackDay, maximumDays = 365) {
+    const startDay = start || fallbackDay;
+    const endDay = end || fallbackDay;
+    const startDate = parseLocalDay(startDay);
+    const endDate = parseLocalDay(endDay);
+    if (!startDate || !endDate) throw new Error('Invalid overview date range');
+
+    const [startYear, startMonth, startDateNumber] = startDay.split('-').map(Number);
+    const [endYear, endMonth, endDateNumber] = endDay.split('-').map(Number);
+    const dayDifference = Math.round(
+        (Date.UTC(endYear, endMonth - 1, endDateNumber) - Date.UTC(startYear, startMonth - 1, startDateNumber))
+        / (24 * 60 * 60 * 1000)
+    );
+    if (dayDifference < 0) throw new Error('Overview start date must not be after end date');
+    const days = dayDifference + 1;
+    if (days > maximumDays) throw new Error(`Overview date range cannot exceed ${maximumDays} days`);
+
+    return { start: startDay, end: endDay, days, endDate };
+}
+
 function buildPluginOverview(collection, trackedContentIds) {
     if (!collection) return { capturedAt: null, plugins: [] };
     const pluginByContentId = new Map(
@@ -95,8 +126,8 @@ function sumTrendValues(trends, contentId) {
     return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) : null;
 }
 
-function buildPeriodPluginOverview(collection, trackedContentIds, trendsByMetric, days) {
-    if (!collection) return { capturedAt: null, days, plugins: [] };
+function buildPeriodPluginOverview(collection, trackedContentIds, trendsByMetric, dateRange) {
+    if (!collection) return { capturedAt: null, ...dateRange, plugins: [] };
     const latestByContentId = new Map(
         collection.plugins.map(plugin => [String(plugin.contentId ?? ''), plugin])
     );
@@ -121,7 +152,7 @@ function buildPeriodPluginOverview(collection, trackedContentIds, trendsByMetric
 
     return {
         capturedAt: `${collection.day} ${collection.time}`,
-        days,
+        ...dateRange,
         plugins
     };
 }
@@ -131,5 +162,6 @@ module.exports = {
     buildPeriodPluginOverview,
     buildPluginOverview,
     calculateRate,
-    findLatestCollection
+    findLatestCollection,
+    resolveOverviewDateRange
 };

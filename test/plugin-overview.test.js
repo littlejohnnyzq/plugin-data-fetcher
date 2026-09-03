@@ -3,7 +3,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const test = require('node:test');
-const { buildPeriodPluginOverview, buildPluginOverview, findLatestCollection } = require('../plugin-overview');
+const {
+    buildPeriodPluginOverview,
+    buildPluginOverview,
+    findLatestCollection,
+    resolveOverviewDateRange
+} = require('../plugin-overview');
 
 test('findLatestCollection uses the newest dated collection file', () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'plugin-overview-'));
@@ -69,9 +74,11 @@ test('buildPeriodPluginOverview sums indexed daily values and calculates period 
         users: series([10, null, 20]),
         likes: series([1, 2, 3]),
         saves: series([null, 4, 5])
-    }, 30);
+    }, { start: '2026-08-05', end: '2026-09-03', days: 30 });
 
     assert.equal(overview.days, 30);
+    assert.equal(overview.start, '2026-08-05');
+    assert.equal(overview.end, '2026-09-03');
     assert.deepEqual(overview.plugins[0], {
         contentId: '1370606842652257742',
         name: 'Owned',
@@ -84,4 +91,16 @@ test('buildPeriodPluginOverview sums indexed daily values and calculates period 
         saveStatus: null,
         saveCollectedAt: '2026-09-03T02:00:00.000Z'
     });
+});
+
+test('resolveOverviewDateRange validates an inclusive custom range', () => {
+    const range = resolveOverviewDateRange('2026-08-05', '2026-09-03', '2026-09-04');
+    assert.equal(range.start, '2026-08-05');
+    assert.equal(range.end, '2026-09-03');
+    assert.equal(range.days, 30);
+    assert.equal(range.endDate.getFullYear(), 2026);
+    assert.throws(
+        () => resolveOverviewDateRange('2026-09-04', '2026-09-03', '2026-09-04'),
+        /must not be after/
+    );
 });
