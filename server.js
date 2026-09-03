@@ -9,7 +9,7 @@ const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
 const { createBrowserSaveCollector } = require('./browser-save-collector');
 const { createCollectionDayPlan, resetDailyGrowth } = require('./collection-day');
-const { buildPluginOverview, findLatestCollection } = require('./plugin-overview');
+const { buildPeriodPluginOverview, findLatestCollection } = require('./plugin-overview');
 const {
     getDailyTrends,
     getHourlyTrends,
@@ -769,8 +769,33 @@ app.get(['/plugin-trends', '/api/plugin-data/plugin-trends'], (req, res) => {
 
 app.get(['/plugin-overview', '/api/plugin-data/plugin-overview'], (req, res) => {
     try {
+        const requestedDays = Number.parseInt(req.query.days || '1', 10);
+        const days = [1, 30, 90].includes(requestedDays) ? requestedDays : 1;
         const latestCollection = findLatestCollection(DATA_DIRECTORY);
-        res.json(buildPluginOverview(latestCollection, REALTIME_SAVE_CONTENT_IDS));
+        if (!latestCollection) {
+            return res.json({ capturedAt: null, days, plugins: [] });
+        }
+        const [year, month, day] = latestCollection.day.split('-').map(Number);
+        const anchorTime = new Date(year, month - 1, day, 12, 0, 0, 0);
+        const trendsByMetric = Object.fromEntries(
+            ['users', 'likes', 'saves'].map(metric => [
+                metric,
+                getDailyTrends(
+                    DAILY_TRENDS_PATH,
+                    DATA_DIRECTORY,
+                    days,
+                    metric,
+                    REALTIME_SAVE_CONTENT_IDS,
+                    anchorTime
+                )
+            ])
+        );
+        res.json(buildPeriodPluginOverview(
+            latestCollection,
+            REALTIME_SAVE_CONTENT_IDS,
+            trendsByMetric,
+            days
+        ));
     } catch (error) {
         console.error('Failed to load plugin overview:', error);
         res.status(500).json({ error: 'Failed to load plugin overview' });

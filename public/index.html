@@ -377,7 +377,7 @@
         .overview-primary-value { font-size: 16px; font-weight: 600; line-height: 19px; }
         .overview-primary-value.positive { color: #d93025; }
         .overview-primary-value.negative { color: #188038; }
-        .overview-secondary-value { margin-top: 2px; color: #777; font-size: 11px; font-weight: 400; line-height: 14px; }
+        .overview-secondary-value { margin-top: 3px; color: #555; font-size: 14px; font-weight: 600; line-height: 17px; }
         .overview-plugin-name { display: block; overflow: hidden; text-overflow: ellipsis; }
         .overview-owned { color: #236de3; }
         .overview-empty { padding: 38px 12px; color: #777; text-align: center; }
@@ -434,8 +434,13 @@
         </div>
         <div id="trend-overview-view" hidden>
             <div class="overview-header">
-                <span>近期数据取最新采集点；点赞率、保存率按累计量 ÷ 当前用户数计算</span>
-                <span id="overview-status">加载中…</span>
+                <span>点赞率、保存率按所选周期增量 ÷ 用户增量计算</span>
+                <div class="trend-control-group" id="overview-period-controls">
+                    <button type="button" class="active" data-days="1">当日</button>
+                    <button type="button" data-days="30">最近1个月</button>
+                    <button type="button" data-days="90">最近3个月</button>
+                    <span id="overview-status">加载中…</span>
+                </div>
             </div>
             <div id="overview-table-wrap" class="overview-table-wrap"></div>
         </div>
@@ -493,6 +498,7 @@
             data: null,
             hiddenContentIds: new Set()
         };
+        const overviewState = { days: 1 };
         let overviewLoaded = false;
         let currentSelectedTimeDiv = null;
         document.addEventListener('DOMContentLoaded', () => {
@@ -584,6 +590,13 @@
             document.querySelectorAll('#trend-view-tabs button').forEach(button => {
                 button.addEventListener('click', () => switchTrendView(button.dataset.view, button));
             });
+            document.querySelectorAll('#overview-period-controls button').forEach(button => {
+                button.addEventListener('click', () => {
+                    overviewState.days = Number(button.dataset.days);
+                    setActiveTrendButton('#overview-period-controls button', button);
+                    loadPluginOverview();
+                });
+            });
             document.getElementById('trend-chart').addEventListener('mousemove', showTrendTooltip);
             document.getElementById('trend-chart').addEventListener('mouseleave', hideTrendTooltip);
             window.addEventListener('resize', () => drawTrendChart(trendState.data));
@@ -604,11 +617,11 @@
             const status = document.getElementById('overview-status');
             status.textContent = '加载中…';
             try {
-                const response = await fetch(`${PLUGIN_DATA_API}/plugin-overview`);
+                const response = await fetch(`${PLUGIN_DATA_API}/plugin-overview?days=${overviewState.days}`);
                 if (!response.ok) throw new Error(`概览数据请求失败（${response.status}）`);
                 const overview = await response.json();
                 renderPluginOverview(overview.plugins);
-                status.textContent = overview.capturedAt ? `采集于 ${overview.capturedAt}` : '暂无数据';
+                status.textContent = overview.capturedAt ? `截止 ${overview.capturedAt}` : '暂无数据';
                 overviewLoaded = true;
             } catch (error) {
                 console.error('Error loading plugin overview:', error);

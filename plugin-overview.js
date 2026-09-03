@@ -63,18 +63,21 @@ function buildPluginOverview(collection, trackedContentIds) {
         const users = toFiniteNumber(plugin.users);
         const likes = toFiniteNumber(plugin.likes);
         const saves = toFiniteNumber(plugin.saves);
+        const userDelta = toFiniteNumber(plugin.DoDCount);
+        const likeDelta = toFiniteNumber(plugin.DoDLikes);
+        const saveDelta = plugin.saveSource === 'figma-browser' ? toFiniteNumber(plugin.DoDSaves) : null;
         return [{
             contentId,
             name: plugin.name || contentId,
             owned: OWNED_PLUGIN_CONTENT_IDS.has(contentId),
             users,
-            userDelta: toFiniteNumber(plugin.DoDCount),
+            userDelta,
             likes,
-            likeDelta: toFiniteNumber(plugin.DoDLikes),
-            likeRate: calculateRate(likes, users),
+            likeDelta,
+            likeRate: calculateRate(likeDelta, userDelta),
             saves,
-            saveDelta: plugin.saveSource === 'figma-browser' ? toFiniteNumber(plugin.DoDSaves) : null,
-            saveRate: calculateRate(saves, users),
+            saveDelta,
+            saveRate: calculateRate(saveDelta, userDelta),
             saveStatus: plugin.saveStatus ?? null,
             saveCollectedAt: plugin.saveCollectedAt ?? null
         }];
@@ -86,8 +89,46 @@ function buildPluginOverview(collection, trackedContentIds) {
     };
 }
 
+function sumTrendValues(trends, contentId) {
+    const series = trends?.series?.find(item => String(item.contentId) === contentId);
+    const values = (series?.values ?? []).filter(Number.isFinite);
+    return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) : null;
+}
+
+function buildPeriodPluginOverview(collection, trackedContentIds, trendsByMetric, days) {
+    if (!collection) return { capturedAt: null, days, plugins: [] };
+    const latestByContentId = new Map(
+        collection.plugins.map(plugin => [String(plugin.contentId ?? ''), plugin])
+    );
+    const plugins = [...trackedContentIds].map(String).map(contentId => {
+        const latest = latestByContentId.get(contentId) ?? {};
+        const userDelta = sumTrendValues(trendsByMetric.users, contentId);
+        const likeDelta = sumTrendValues(trendsByMetric.likes, contentId);
+        const saveDelta = sumTrendValues(trendsByMetric.saves, contentId);
+        return {
+            contentId,
+            name: latest.name || trendsByMetric.users?.series?.find(item => String(item.contentId) === contentId)?.name || contentId,
+            owned: OWNED_PLUGIN_CONTENT_IDS.has(contentId),
+            userDelta,
+            likeDelta,
+            likeRate: calculateRate(likeDelta, userDelta),
+            saveDelta,
+            saveRate: calculateRate(saveDelta, userDelta),
+            saveStatus: latest.saveStatus ?? null,
+            saveCollectedAt: latest.saveCollectedAt ?? null
+        };
+    });
+
+    return {
+        capturedAt: `${collection.day} ${collection.time}`,
+        days,
+        plugins
+    };
+}
+
 module.exports = {
     OWNED_PLUGIN_CONTENT_IDS,
+    buildPeriodPluginOverview,
     buildPluginOverview,
     calculateRate,
     findLatestCollection
