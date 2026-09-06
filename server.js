@@ -7,8 +7,12 @@ const axios = require('axios');
 const { mountAnalyticsRelay } = require('./analytics-relay');
 const { createDashboardAuth } = require('./dashboard-auth');
 const { scheduleAlignedTask } = require('./aligned-scheduler');
-const { createBrowserSaveCollector } = require('./browser-save-collector');
+const {
+    createBrowserSaveCollector,
+    withBrowserSaveSession
+} = require('./browser-save-collector');
 const { createCollectionDayPlan, resetDailyGrowth } = require('./collection-day');
+const { createExclusiveTask } = require('./exclusive-task');
 const {
     buildPeriodPluginOverview,
     findLatestCollection,
@@ -104,44 +108,46 @@ async function prefetchRealtimeSaveCounts(currentTime) {
     );
     const results = new Map();
 
-    console.log(`Browser Save batch: ${selectedContentIds.join(', ')}`);
-    try {
-        await browserSaveCollector.warmUp();
-    } catch (error) {
-        console.error('Failed to warm up Figma browser:', error.message);
-        for (const contentId of selectedContentIds) results.set(contentId, { error });
-        return createPrefetchedSaveResult(selectedContentIds, results);
-    }
-
-    for (let index = 0; index < selectedContentIds.length; index++) {
-        const contentId = selectedContentIds[index];
+    return withBrowserSaveSession(browserSaveCollector, async () => {
+        console.log(`Browser Save batch: ${selectedContentIds.join(', ')}`);
         try {
-            const saves = await browserSaveCollector.fetchSaveCount(contentId);
-            results.set(contentId, { saves });
-            console.log(`Prefetched browser Saves for ${contentId}: ${saves}`);
+            await browserSaveCollector.warmUp();
         } catch (error) {
-            results.set(contentId, { error });
-            console.error(`Failed to prefetch browser Saves for ${contentId}:`, error.message);
-            if (error.code === 'FIGMA_WAF_CHALLENGE' || error.code === 'FIGMA_WAF_CAPTCHA') {
-                for (const deferredId of selectedContentIds.slice(index + 1)) {
-                    const deferredError = new Error('Browser Save collection deferred after WAF challenge');
-                    deferredError.code = 'SAVE_BROWSER_DEFERRED';
-                    results.set(deferredId, { error: deferredError });
+            console.error('Failed to warm up Figma browser:', error.message);
+            for (const contentId of selectedContentIds) results.set(contentId, { error });
+            return createPrefetchedSaveResult(selectedContentIds, results);
+        }
+
+        for (let index = 0; index < selectedContentIds.length; index++) {
+            const contentId = selectedContentIds[index];
+            try {
+                const saves = await browserSaveCollector.fetchSaveCount(contentId);
+                results.set(contentId, { saves });
+                console.log(`Prefetched browser Saves for ${contentId}: ${saves}`);
+            } catch (error) {
+                results.set(contentId, { error });
+                console.error(`Failed to prefetch browser Saves for ${contentId}:`, error.message);
+                if (error.code === 'FIGMA_WAF_CHALLENGE' || error.code === 'FIGMA_WAF_CAPTCHA') {
+                    for (const deferredId of selectedContentIds.slice(index + 1)) {
+                        const deferredError = new Error('Browser Save collection deferred after WAF challenge');
+                        deferredError.code = 'SAVE_BROWSER_DEFERRED';
+                        results.set(deferredId, { error: deferredError });
+                    }
+                    break;
                 }
-                break;
+            }
+
+            if (index < selectedContentIds.length - 1) {
+                const delayMs = calculateJitteredDelay(
+                    REALTIME_SAVE_DELAY_MS,
+                    REALTIME_SAVE_DELAY_JITTER_MS
+                );
+                await wait(delayMs);
             }
         }
 
-        if (index < selectedContentIds.length - 1) {
-            const delayMs = calculateJitteredDelay(
-                REALTIME_SAVE_DELAY_MS,
-                REALTIME_SAVE_DELAY_JITTER_MS
-            );
-            await wait(delayMs);
-        }
-    }
-
-    return createPrefetchedSaveResult(selectedContentIds, results);
+        return createPrefetchedSaveResult(selectedContentIds, results);
+    });
 }
 
 function createPrefetchedSaveResult(contentIds, results) {
@@ -398,7 +404,13 @@ app.listen(port, host, () => {
 
 function startFetchTask() {
     scheduleAlignedTask(boundaryTimeMs => fetchData(new Date(boundaryTimeMs)), {
-        onError: error => console.error('Error during scheduled fetch:', error)
+        onError: error => {
+            if (error.code === 'COLLECTION_IN_PROGRESS') {
+                console.warn('Skipping scheduled fetch because the previous collection is still running');
+                return;
+            }
+            console.error('Error during scheduled fetch:', error);
+        }
     });
 }
 
@@ -413,7 +425,9 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
     });
 }
 
-async function fetchData(collectionTime = new Date()) {
+const fetchData = createExclusiveTask(performFetchData);
+
+async function performFetchData(collectionTime = new Date()) {
     try {
         const now = collectionTime;
         const dayPlan = createCollectionDayPlan(now);
@@ -448,7 +462,7 @@ async function fetchData(collectionTime = new Date()) {
             storeData(pluginData, now); // 将当前时间传递给storeData
         }
     } catch (error) {
-        console.error('Error during fetchData:', error);
+        console.error('Error during performFetchData:', error);
         throw error;
     }
 }
@@ -474,6 +488,9 @@ app.get(['/fetch-plugin-data', '/api/plugin-data/fetch-plugin-data'], async (req
         console.log('Successfully fetched plugin data');
         res.json({ success: true });
     } catch (error) {
+        if (error.code === 'COLLECTION_IN_PROGRESS') {
+            return res.status(409).json({ error: 'Plugin data collection is already in progress' });
+        }
         console.error('Error fetching plugin data:', error);
         res.status(500).json({ error: 'Failed to fetch plugin data' });
     }

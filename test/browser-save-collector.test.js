@@ -1,6 +1,22 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { createBrowserSaveCollector } = require('../browser-save-collector');
+const {
+    createBrowserSaveCollector,
+    withBrowserSaveSession
+} = require('../browser-save-collector');
+
+test('browser Save session always closes the browser', async () => {
+    let closeCount = 0;
+    const collector = { close: async () => closeCount++ };
+
+    await assert.rejects(
+        withBrowserSaveSession(collector, async () => {
+            throw new Error('collection failed');
+        }),
+        /collection failed/
+    );
+    assert.equal(closeCount, 1);
+});
 
 test('browser Save collector reuses one persistent browser and page', async () => {
     const visitedUrls = [];

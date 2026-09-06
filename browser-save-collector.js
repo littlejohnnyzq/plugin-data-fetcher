@@ -10,6 +10,14 @@ function delay(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+async function withBrowserSaveSession(collector, task) {
+    try {
+        return await task();
+    } finally {
+        await collector.close();
+    }
+}
+
 function createBrowserSaveCollector(options = {}) {
     const puppeteer = options.puppeteer ?? require('puppeteer');
     const extractSaveCount = options.extractSaveCount;
@@ -226,5 +234,6 @@ function createBrowserSaveCollector(options = {}) {
 
 module.exports = {
     DEFAULT_PROFILE_PATH,
-    createBrowserSaveCollector
+    createBrowserSaveCollector,
+    withBrowserSaveSession
 };
