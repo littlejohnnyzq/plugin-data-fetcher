@@ -189,21 +189,52 @@ function createUserStore(databasePath, hmacSecret) {
     const countUsers = database.prepare(`
         SELECT COUNT(*) AS total
         FROM analytics_users
-        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+        WHERE (? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?)
+          AND (
+              ? = ''
+              OR EXISTS (
+                  SELECT 1 FROM analytics_user_plugins filtered
+                  WHERE filtered.user_id_hash = analytics_users.user_id_hash
+                    AND filtered.plugin_id = ?
+              )
+          )
     `);
     const listUserRowsByRecentUse = database.prepare(`
         SELECT user_id_hash, user_name, launch_count, created_at, last_seen_at
         FROM analytics_users
-        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+        WHERE (? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?)
+          AND (
+              ? = ''
+              OR EXISTS (
+                  SELECT 1 FROM analytics_user_plugins filtered
+                  WHERE filtered.user_id_hash = analytics_users.user_id_hash
+                    AND filtered.plugin_id = ?
+              )
+          )
         ORDER BY last_seen_at DESC, user_id_hash ASC
         LIMIT ? OFFSET ?
     `);
     const listUserRowsByLaunchCount = database.prepare(`
         SELECT user_id_hash, user_name, launch_count, created_at, last_seen_at
         FROM analytics_users
-        WHERE ? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?
+        WHERE (? = '' OR user_name LIKE ? COLLATE NOCASE OR user_id_hash LIKE ?)
+          AND (
+              ? = ''
+              OR EXISTS (
+                  SELECT 1 FROM analytics_user_plugins filtered
+                  WHERE filtered.user_id_hash = analytics_users.user_id_hash
+                    AND filtered.plugin_id = ?
+              )
+          )
         ORDER BY launch_count DESC, last_seen_at DESC, user_id_hash ASC
         LIMIT ? OFFSET ?
+    `);
+    const listPlugins = database.prepare(`
+        SELECT plugin_id, plugin_name
+        FROM analytics_plugins
+        ORDER BY
+            CASE WHEN plugin_name = '' THEN plugin_id ELSE plugin_name END COLLATE NOCASE,
+            plugin_id
     `);
 
     const resolveTransaction = database.transaction((event, nowMs) => {
@@ -249,12 +280,21 @@ function createUserStore(databasePath, hmacSecret) {
         const offset = Math.max(Number.isSafeInteger(options.offset) ? options.offset : 0, 0);
         const query = String(options.query || '').trim().slice(0, 100);
         const sort = options.sort === 'launches' ? 'launches' : 'recent';
+        const pluginId = String(options.pluginId || '').trim().slice(0, 128);
         const pattern = `%${query}%`;
-        const total = countUsers.get(query, pattern, pattern).total;
+        const total = countUsers.get(query, pattern, pattern, pluginId, pluginId).total;
         const listStatement = sort === 'launches'
             ? listUserRowsByLaunchCount
             : listUserRowsByRecentUse;
-        const userRows = listStatement.all(query, pattern, pattern, limit, offset);
+        const userRows = listStatement.all(
+            query,
+            pattern,
+            pattern,
+            pluginId,
+            pluginId,
+            limit,
+            offset
+        );
         const pluginsByUser = new Map(userRows.map(user => [user.user_id_hash, []]));
 
         if (userRows.length > 0) {
@@ -291,6 +331,11 @@ function createUserStore(databasePath, hmacSecret) {
             limit,
             offset,
             sort,
+            pluginId,
+            pluginOptions: listPlugins.all().map(plugin => ({
+                id: plugin.plugin_id,
+                name: plugin.plugin_name || ''
+            })),
             users: userRows.map(user => ({
                 id: user.user_id_hash,
                 name: user.user_name || '',

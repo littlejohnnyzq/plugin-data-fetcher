@@ -51,6 +51,7 @@
             align-items: center;
             gap: 10px;
         }
+        #plugin-filter { max-width: 260px; }
         input {
             width: min(360px, 62vw);
             padding: 7px 9px;
@@ -156,6 +157,11 @@
             <button id="search-button" class="action-button" type="button">搜索</button>
         </div>
         <div class="toolbar-meta">
+            <label>插件：
+                <select id="plugin-filter">
+                    <option value="">全部插件</option>
+                </select>
+            </label>
             <label>排序：
                 <select id="user-sort">
                     <option value="recent">最近使用时间</option>
@@ -208,6 +214,10 @@
             currentPage = 1;
             loadUsers();
         });
+        document.getElementById('plugin-filter').addEventListener('change', () => {
+            currentPage = 1;
+            loadUsers();
+        });
         document.getElementById('previous-page').addEventListener('click', () => {
             if (currentPage <= 1) return;
             currentPage -= 1;
@@ -225,7 +235,8 @@
                 page: String(currentPage),
                 limit: String(PAGE_SIZE),
                 q: document.getElementById('user-search').value.trim(),
-                sort: document.getElementById('user-sort').value
+                sort: document.getElementById('user-sort').value,
+                plugin_id: document.getElementById('plugin-filter').value
             });
             status.textContent = '加载中…';
             try {
@@ -233,6 +244,7 @@
                 if (!response.ok) throw new Error(`用户数据请求失败（${response.status}）`);
                 const result = await response.json();
                 totalUsers = result.total;
+                renderPluginOptions(result.pluginOptions || []);
                 renderUsers(result.users);
                 updatePagination();
                 status.textContent = `共 ${totalUsers.toLocaleString('zh-CN')} 位用户`;
@@ -241,6 +253,18 @@
                 status.textContent = '加载失败';
                 document.getElementById('empty-state').textContent = error.message;
                 document.getElementById('empty-state').hidden = false;
+            }
+        }
+
+        function renderPluginOptions(pluginOptions) {
+            const select = document.getElementById('plugin-filter');
+            const selectedValue = select.value;
+            select.replaceChildren(new Option('全部插件', ''));
+            pluginOptions.forEach(plugin => {
+                select.add(new Option(plugin.name || '未命名插件', plugin.id));
+            });
+            if ([...select.options].some(option => option.value === selectedValue)) {
+                select.value = selectedValue;
             }
         }
 

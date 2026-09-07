@@ -231,6 +231,22 @@ test('lists users with their plugin relationships using search and pagination', 
         new Set(search.users[0].plugins.map(plugin => plugin.name)),
         new Set(['iCharts', 'Another Plugin'])
     );
+
+    const byPlugin = store.listUsers({ pluginId: SECOND_PLUGIN_ID });
+    assert.equal(byPlugin.total, 1);
+    assert.equal(byPlugin.pluginId, SECOND_PLUGIN_ID);
+    assert.equal(byPlugin.users[0].name, 'Alice');
+    assert.deepEqual(
+        byPlugin.pluginOptions,
+        [
+            { id: SECOND_PLUGIN_ID, name: 'Another Plugin' },
+            { id: PLUGIN_ID, name: 'iCharts' }
+        ]
+    );
+
+    const missingPlugin = store.listUsers({ pluginId: 'missing-plugin' });
+    assert.equal(missingPlugin.total, 0);
+    assert.deepEqual(missingPlugin.users, []);
 });
 
 test('an existing single-plugin database upgrades without losing user identity', t => {

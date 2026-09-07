@@ -253,6 +253,7 @@ app.get('/api/plugin-data/analytics-users', (req, res) => {
         const result = analyticsRelay.listUsers({
             query: req.query.q,
             sort: req.query.sort,
+            pluginId: req.query.plugin_id,
             limit,
             offset: (page - 1) * limit
         });
