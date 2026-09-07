@@ -17,6 +17,11 @@ user therefore keeps one GA4 `client_id` across every plugin product.
 
 The raw Figma user ID and raw event payloads are never stored.
 
+Developer and test accounts can be excluded from both local storage and GA4
+forwarding by adding their comma-separated HMAC user IDs to
+`ANALYTICS_EXCLUDED_USER_ID_HASHES`. Excluded events receive a successful
+response but are discarded before counters and plugin relationships change.
+
 ## Configuration
 
 Copy the values from `.env.example` into the environment used to start

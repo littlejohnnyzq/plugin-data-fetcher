@@ -327,6 +327,8 @@ function createAnalyticsRelay(options = {}) {
         || parseList(process.env.ALLOWED_PLUGIN_IDS, '1370606842652257742');
     const allowedEventNames = options.allowedEventNames
         || parseList(process.env.ALLOWED_EVENT_NAMES, 'plugin_launch');
+    const excludedUserIdHashes = options.excludedUserIdHashes
+        || parseList(process.env.ANALYTICS_EXCLUDED_USER_ID_HASHES, '');
     const debug = options.debug ?? process.env.GA4_DEBUG === 'true';
     const dryRun = options.dryRun ?? process.env.GA4_DRY_RUN === 'true';
     const timeoutMs = parsePositiveInteger(options.timeoutMs || process.env.GA4_TIMEOUT_MS, 4000);
@@ -392,6 +394,10 @@ function createAnalyticsRelay(options = {}) {
             return res.status(validation.status || 400).json({ ok: false, error: validation.error });
         }
         const { event } = validation;
+        const userIdHash = hashUserId(event.userId, hmacSecret);
+        if (excludedUserIdHashes.has(userIdHash)) {
+            return res.status(204).end();
+        }
         if (!consumeUser(`${event.pluginId}:${event.userId}`)) {
             return res.status(429).json({ ok: false, error: 'User rate limit exceeded' });
         }

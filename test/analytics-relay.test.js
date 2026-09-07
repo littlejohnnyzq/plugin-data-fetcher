@@ -93,6 +93,50 @@ test('same Figma user reuses one GA4 client_id', async t => {
     assert.notEqual(forwarded[0].payload.user_id, 'figma-user-1');
 });
 
+test('excluded users are neither stored nor forwarded', async t => {
+    const forwarded = [];
+    const excludedUserId = 'figma-developer-user';
+    const relay = createAnalyticsRelay({
+        databasePath: createTempDatabase(t),
+        hmacSecret: HMAC_SECRET,
+        measurementId: 'G-TEST',
+        apiSecret: 'test-secret',
+        allowedPluginIds: new Set([PLUGIN_ID]),
+        allowedEventNames: new Set(['plugin_launch']),
+        excludedUserIdHashes: new Set([hashUserId(excludedUserId, HMAC_SECRET)]),
+        axiosClient: {
+            async post(url, payload) {
+                forwarded.push({ url, payload });
+                return { status: 204 };
+            }
+        }
+    });
+    t.after(() => relay.close());
+    const response = {
+        statusCode: null,
+        status(code) {
+            this.statusCode = code;
+            return this;
+        },
+        end() {
+            return this;
+        },
+        json() {
+            return this;
+        }
+    };
+
+    await relay.handle({
+        body: createEvent({ user_id: excludedUserId, user_name: 'Developer' }),
+        headers: {},
+        ip: '127.0.0.1'
+    }, response);
+
+    assert.equal(response.statusCode, 204);
+    assert.equal(forwarded.length, 0);
+    assert.equal(relay.listUsers().total, 0);
+});
+
 test('only launch events increment the stored launch counter', t => {
     const databasePath = createTempDatabase(t);
     const store = createUserStore(databasePath, HMAC_SECRET);
