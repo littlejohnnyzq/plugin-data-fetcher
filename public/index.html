@@ -776,7 +776,10 @@
 
                 const line = document.createElement('span');
                 line.className = 'trend-legend-line';
-                line.style.backgroundColor = TREND_COLORS[index % TREND_COLORS.length];
+                const color = TREND_COLORS[index % TREND_COLORS.length];
+                line.style.background = HIGHLIGHTED_PLUGIN_IDS.has(String(item.contentId))
+                    ? color
+                    : `repeating-linear-gradient(to right, ${color} 0 5px, transparent 5px 8px)`;
                 button.appendChild(line);
                 button.appendChild(document.createTextNode(abbreviateTrendPluginName(item.name)));
                 button.addEventListener('click', () => {
@@ -848,9 +851,11 @@
                 ? pad.left + plotWidth / 2
                 : pad.left + (plotWidth * index) / (labels.length - 1);
             visibleSeries.forEach(series => {
+                const isOwnedPlugin = HIGHLIGHTED_PLUGIN_IDS.has(String(series.contentId));
                 ctx.strokeStyle = series.color;
                 ctx.lineWidth = 1.7;
-                ctx.globalAlpha = HIGHLIGHTED_PLUGIN_IDS.has(String(series.contentId)) ? 1 : 0.4;
+                ctx.globalAlpha = isOwnedPlugin ? 1 : 0.4;
+                ctx.setLineDash(isOwnedPlugin ? [] : [6, 4]);
                 ctx.beginPath();
                 let drawing = false;
                 series.values.forEach((value, index) => {
@@ -866,6 +871,7 @@
                 });
                 ctx.stroke();
             });
+            ctx.setLineDash([]);
             ctx.globalAlpha = 1;
 
             const labelStep = Math.max(1, Math.ceil(labels.length / 8));
