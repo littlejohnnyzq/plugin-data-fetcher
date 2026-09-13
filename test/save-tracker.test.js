@@ -54,20 +54,33 @@ test('Print for Figma is always included in realtime Save collection', () => {
     assert.equal(REALTIME_SAVE_CONTENT_IDS.has('874441781480244375'), true);
 });
 
-test('eleven realtime Save plugins rotate in explicit batches of five and six', () => {
+test('eight realtime Save plugins rotate in two explicit batches of four', () => {
     const contentIds = [...REALTIME_SAVE_CONTENT_IDS];
     const firstBoundary = new Date(2026, 7, 30, 10, 0, 0, 0);
     const secondBoundary = new Date(firstBoundary.getTime() + 30 * 60 * 1000);
     const firstBatch = selectRealtimeSaveBatch(contentIds, firstBoundary);
     const secondBatch = selectRealtimeSaveBatch(contentIds, secondBoundary);
 
-    assert.equal(contentIds.length, 11);
-    assert.deepEqual(REALTIME_SAVE_BATCHES.map(batch => batch.length), [5, 6]);
+    assert.equal(contentIds.length, 8);
+    assert.deepEqual(REALTIME_SAVE_BATCHES.map(batch => batch.length), [4, 4]);
     assert.deepEqual(new Set(REALTIME_SAVE_BATCHES.flat()), new Set(contentIds));
-    assert.deepEqual([firstBatch.length, secondBatch.length].sort(), [5, 6]);
+    assert.deepEqual([firstBatch.length, secondBatch.length], [4, 4]);
     assert.equal(firstBatch.some(contentId => secondBatch.includes(contentId)), false);
     assert.deepEqual(new Set([...firstBatch, ...secondBatch]), new Set(contentIds));
     assert.equal(REALTIME_SAVE_BATCHES[1].includes('1419316259939080556'), true);
+});
+
+test('retired realtime Save plugins are excluded from all browser batches', () => {
+    const retiredContentIds = [
+        '988173868842375596',
+        '1249759048471403961',
+        '731451122947612104'
+    ];
+
+    for (const contentId of retiredContentIds) {
+        assert.equal(REALTIME_SAVE_CONTENT_IDS.has(contentId), false);
+        assert.equal(REALTIME_SAVE_BATCHES.flat().includes(contentId), false);
+    }
 });
 
 test('realtime Save random wait stays between four and seven seconds', () => {
@@ -110,7 +123,7 @@ test('extractSaveCount reads UseAction from Figma JSON-LD', () => {
 
 test('collectSaveCounts only requests watched browser plugins and calculates growth from browser data', async () => {
     const plugins = [
-        { id: 'watched', contentId: '731451122947612104', name: 'Watched' },
+        { id: 'watched', contentId: '1370606842652257742', name: 'Watched' },
         { id: 'ignored', contentId: '102', name: 'Ignored' }
     ];
     const requestedContentIds = [];
@@ -128,7 +141,7 @@ test('collectSaveCounts only requests watched browser plugins and calculates gro
         }
     );
 
-    assert.deepEqual(requestedContentIds, ['731451122947612104']);
+    assert.deepEqual(requestedContentIds, ['1370606842652257742']);
     assert.deepEqual(
         plugins.map(plugin => ({ id: plugin.id, tracked: plugin.isSaveTracked, saves: plugin.saves, growth: plugin.DoDSaves })),
         [
@@ -140,7 +153,7 @@ test('collectSaveCounts only requests watched browser plugins and calculates gro
 
 test('non-browser plugins do not use FigStats or another Save fetcher', async () => {
     const plugins = [
-        { id: 'realtime', contentId: '731451122947612104', name: 'Realtime' },
+        { id: 'realtime', contentId: '1370606842652257742', name: 'Realtime' },
         { id: 'daily', contentId: '200', name: 'Daily' }
     ];
     const calls = [];
@@ -159,14 +172,14 @@ test('non-browser plugins do not use FigStats or another Save fetcher', async ()
         }
     );
 
-    assert.deepEqual(calls, ['figma:731451122947612104']);
+    assert.deepEqual(calls, ['figma:1370606842652257742']);
     assert.equal(plugins[0].saveSource, 'figma-browser');
     assert.equal(plugins[1].saves, null);
     assert.equal(plugins[1].saveSource, null);
 });
 
 test('realtime collection cools down and retries once after a Figma WAF challenge', async () => {
-    const plugin = { id: 'realtime', contentId: '731451122947612104', name: 'Realtime' };
+    const plugin = { id: 'realtime', contentId: '1370606842652257742', name: 'Realtime' };
     let attempts = 0;
 
     await collectSaveCounts(
@@ -197,7 +210,7 @@ test('realtime collection cools down and retries once after a Figma WAF challeng
 });
 
 test('failed browser collection carries forward browser values and ignores FigStats values', async () => {
-    const browserPlugin = { id: 'browser', contentId: '731451122947612104', name: 'Browser' };
+    const browserPlugin = { id: 'browser', contentId: '1370606842652257742', name: 'Browser' };
     const dailyPlugin = { id: 'daily', contentId: '200', name: 'Daily' };
 
     await collectSaveCounts(
@@ -237,7 +250,7 @@ test('failed browser collection carries forward browser values and ignores FigSt
 
 test('browser Save collection stops the run after a WAF challenge', async () => {
     const plugins = [
-        { id: 'one', contentId: '731451122947612104', name: 'One' },
+        { id: 'one', contentId: '1370606842652257742', name: 'One' },
         { id: 'two', contentId: '1404821057322599271', name: 'Two' }
     ];
     let attempts = 0;
@@ -270,9 +283,9 @@ test('browser Save collection stops the run after a WAF challenge', async () => 
 
 test('browser Save collection only processes the selected half-hour batch', async () => {
     const plugins = [
-        { id: 'one', contentId: '731451122947612104', name: 'One' },
+        { id: 'one', contentId: '1370606842652257742', name: 'One' },
         { id: 'two', contentId: '1404821057322599271', name: 'Two' },
-        { id: 'three', contentId: '1249759048471403961', name: 'Three' }
+        { id: 'three', contentId: '961270034818256057', name: 'Three' }
     ];
     const requested = [];
 
