@@ -4,7 +4,7 @@ The collector listens on `127.0.0.1:1086` and is exposed only through the
 Nginx routes below. The public dashboard URL is:
 
 ```text
-https://tutop.top/product/plugin-data/
+https://moon8s.com/product/plugin-data/
 ```
 
 Keep the server firewall closed for public access to port 1086. Direct IP and
@@ -59,11 +59,11 @@ systemctl status plugin-data-fetcher --no-pager
 When replacing an existing `screen` process, stop that old process before
 starting the service so only one collector writes scheduled snapshots.
 
-## 4. Add routes to the shared tutop.top Nginx server
+## 4. Add routes to the shared moon8s.com Nginx server
 
 This repository deliberately provides only `location` blocks. The domain is
 shared by the homepage, Tura and this collector, so a second catch-all
-`server_name tutop.top` configuration must not be installed.
+`server_name moon8s.com` configuration must not be installed.
 
 Copy the route snippet:
 
@@ -72,7 +72,7 @@ mkdir -p /etc/nginx/snippets
 cp deploy/nginx/plugin-data-fetcher.locations.conf /etc/nginx/snippets/
 ```
 
-Add this line inside the existing HTTPS `server {}` block for `tutop.top`:
+Add this line inside the existing HTTPS `server {}` block for `moon8s.com`:
 
 ```nginx
 include /etc/nginx/snippets/plugin-data-fetcher.locations.conf;
@@ -93,8 +93,8 @@ for `/api/plugin-events`.
 
 ```bash
 curl -fsS http://127.0.0.1:1086/analytics-healthz
-curl -fsS https://tutop.top/analytics-healthz
-curl -I https://tutop.top/product/plugin-data/
+curl -fsS https://moon8s.com/analytics-healthz
+curl -I https://moon8s.com/product/plugin-data/
 journalctl -u plugin-data-fetcher -n 100 --no-pager
 ```
 
