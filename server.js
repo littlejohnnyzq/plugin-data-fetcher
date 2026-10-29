@@ -192,11 +192,12 @@ if (websiteAuth) {
                 if (req.path.startsWith('/api/')) return res.status(401).json({error:'请先登录 Moon8s'});
                 return res.redirect(303, '/?login=required&next=%2Fproduct%2Fplugin-data%2Fdashboard%2F');
             }
+            if (!req.moonUser.isAdmin) return res.status(403).json({error:'仅管理员可访问插件数据分析'});
             if (!['GET','HEAD','OPTIONS'].includes(req.method) && req.get('origin') !== 'https://moon8s.com') return res.status(403).json({error:'请求来源无效'});
             next();
         } catch { return res.status(503).json({error:'登录服务暂不可用'}); }
     });
-    dashboardAuth.isAuthenticated = req => !!req.moonUser;
+    dashboardAuth.isAuthenticated = req => req.moonUser?.isAdmin === true;
     dashboardAuth.requireAuth = (req, res, next) => req.moonUser ? next() : res.status(401).json({error:'请先登录 Moon8s'});
     dashboardAuth.isConfigured = () => true;
 }

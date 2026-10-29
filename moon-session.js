@@ -12,7 +12,7 @@ function createMoonSession({endpoint='http://127.0.0.1:1089/api/site/session',fe
     if(!response.ok)throw Object.assign(new Error('登录服务暂不可用，请稍后重试。'),{status:503});
     const {user}=await response.json();
     if(!user || typeof user.id!=='string')return null;
-    return {userId:user.id,name:user.name,csrf:createHash('sha256').update('moon8s-tool-csrf:'+token).digest('hex')};
+    return {userId:user.id,name:user.name,isAdmin:user.isAdmin===true,csrf:createHash('sha256').update('moon8s-tool-csrf:'+token).digest('hex')};
   };
 }
 module.exports={createMoonSession};

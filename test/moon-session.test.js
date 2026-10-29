@@ -8,3 +8,11 @@ test('website mode only accepts a verified Moon8s cookie, never legacy or header
  const expired=createMoonSession({fetcher:async()=>({ok:true,json:async()=>({user:null})})});assert.equal(await expired({headers:{cookie:'__Host-moon_session='+token}}),null);
  const failed=createMoonSession({fetcher:async()=>{throw Error('offline')}});await assert.rejects(failed({headers:{cookie:'__Host-moon_session='+token}}),{status:503});
 });
+
+test('admin role comes only from the validated website session',async()=>{
+ for(const [role,expected] of [[true,true],[false,false],[undefined,false],['true',false]]){
+  const lookup=createMoonSession({fetcher:async()=>({ok:true,json:async()=>({user:{id:'user',isAdmin:role}})})});
+  const user=await lookup({headers:{cookie:'__Host-moon_session='+'x'.repeat(43),'x-admin':'true'}});
+  assert.equal(user.isAdmin,expected);
+ }
+});
