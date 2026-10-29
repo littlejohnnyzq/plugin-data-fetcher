@@ -181,7 +181,26 @@ app.use('/api/plugin-events', express.json({ limit: '16kb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false, limit: '4kb' }));
 const analyticsRelay = mountAnalyticsRelay(app);
+const websiteAuth = process.env.DASHBOARD_AUTH_MODE === 'moon8s';
 const dashboardAuth = createDashboardAuth();
+if (websiteAuth) {
+    const moonSession = require('./moon-session').createMoonSession();
+    app.use(async (req, res, next) => {
+        try {
+            req.moonUser = await moonSession(req);
+            if (!req.moonUser) {
+                if (req.path.startsWith('/api/')) return res.status(401).json({error:'请先登录 Moon8s'});
+                return res.redirect(303, '/?login=required&next=%2Fproduct%2Fplugin-data%2Fdashboard%2F');
+            }
+            if (!['GET','HEAD','OPTIONS'].includes(req.method) && req.get('origin') !== 'https://moon8s.com') return res.status(403).json({error:'请求来源无效'});
+            next();
+        } catch { return res.status(503).json({error:'登录服务暂不可用'}); }
+    });
+    dashboardAuth.isAuthenticated = req => !!req.moonUser;
+    dashboardAuth.requireAuth = (req, res, next) => req.moonUser ? next() : res.status(401).json({error:'请先登录 Moon8s'});
+    dashboardAuth.isConfigured = () => true;
+}
+
 
 app.get('/', (req, res) => {
     return res.redirect(302, `${PRODUCT_BASE_PATH}/`);
@@ -198,6 +217,7 @@ app.get(PRODUCT_BASE_PATH, (req, res) => {
 });
 
 app.post(`${PRODUCT_BASE_PATH}/enter`, (req, res) => {
+    if (websiteAuth) return res.redirect(303, `${PRODUCT_BASE_PATH}/dashboard/`);
     const clientKey = req.ip || req.socket.remoteAddress || 'unknown';
     const attempt = dashboardAuth.canAttempt(clientKey);
 
@@ -219,6 +239,7 @@ app.post(`${PRODUCT_BASE_PATH}/enter`, (req, res) => {
 });
 
 app.post(`${PRODUCT_BASE_PATH}/logout`, (req, res) => {
+    if (websiteAuth) return res.redirect(303, '/');
     dashboardAuth.clearCookie(req, res);
     return res.redirect(303, `${PRODUCT_BASE_PATH}/`);
 });
@@ -388,7 +409,7 @@ function findLatestSuccessfulSaveData(currentTime) {
 
 app.listen(port, host, () => {
     console.log(`Server is running on http://${host}:${port}`);
-    console.log(`Dashboard password protection: ${dashboardAuth.isConfigured() ? 'enabled' : 'NOT CONFIGURED'}`);
+    console.log(`Dashboard authentication: ${websiteAuth ? 'Moon8s website session' : dashboardAuth.isConfigured() ? 'standalone password' : 'NOT CONFIGURED'}`);
     console.log('Available endpoints:');
     console.log(`- GET ${PRODUCT_BASE_PATH}/ (landing)`);
     console.log(`- GET ${PRODUCT_BASE_PATH}/dashboard/ (password protected)`);
